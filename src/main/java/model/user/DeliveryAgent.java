@@ -1,6 +1,8 @@
-package model;
+package model.user;
 
-public class DeliveryAgent extends BaseUser{
+import model.user.BaseUser;
+
+public class DeliveryAgent extends BaseUser {
     public DeliveryAgent(){
         super();
     }

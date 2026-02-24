@@ -1,15 +1,11 @@
 package service;
 
-import model.BaseUser;
-import model.User;
-import model.UserFactory;
+import model.user.User;
+import model.user.UserFactory;
 
-import javax.print.DocFlavor;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 public abstract class BaseService {
     private final ConcurrentHashMap<String, User> allUserMap = new ConcurrentHashMap<>();

@@ -1,10 +1,10 @@
-package model;
+package model.user;
 
 import util.IdGenerator;
 
 import java.util.Objects;
 
-public abstract class BaseUser implements User{
+public abstract class BaseUser implements User {
     private static final IdGenerator idGenerator = new IdGenerator();
     private final Integer userId;
     private String username;

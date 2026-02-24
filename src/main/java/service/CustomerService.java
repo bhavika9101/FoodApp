@@ -1,7 +1,6 @@
 package service;
 
-import model.Customer;
-import model.User;
+import model.user.User;
 
 public class CustomerService extends BaseService{
     @Override

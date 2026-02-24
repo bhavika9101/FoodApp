@@ -1,11 +1,16 @@
-package model;
+package model.user;
+
+import model.user.Admin;
+import model.user.Customer;
+import model.user.DeliveryAgent;
+import model.user.User;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 
 public class UserFactory {
-    private static final Map<String, BiFunction<String,String,User>> registry = new HashMap<>();
+    private static final Map<String, BiFunction<String,String, User>> registry = new HashMap<>();
 
     static {
         registry.put("ADMIN", Admin::getInstance);

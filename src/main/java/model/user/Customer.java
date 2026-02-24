@@ -1,5 +1,8 @@
-package model;
-public class Customer extends BaseUser{
+package model.user;
+
+import model.user.BaseUser;
+
+public class Customer extends BaseUser {
     public Customer(){
         super();
     }

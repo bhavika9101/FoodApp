@@ -1,6 +1,6 @@
 package service;
 
-import model.User;
+import model.user.User;
 
 public class DeliveryAgentService extends BaseService{
     static private Integer deliveryAgentCount = 0;
