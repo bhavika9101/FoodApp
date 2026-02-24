@@ -8,7 +8,7 @@ public class UserFactory {
     private static final Map<String, BiFunction<String,String,User>> registry = new HashMap<>();
 
     static {
-        registry.put("ADMIN", Admin::new);
+        registry.put("ADMIN", Admin::getInstance);
         registry.put("CUSTOMER", Customer::new);
         registry.put("DELIVERY_AGENT", DeliveryAgent::new);
     }

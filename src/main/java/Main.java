@@ -6,21 +6,17 @@ import service.DeliveryAgentService;
 
 public class Main {
     public static void main(String[] args) {
-        AdminService adminService= new AdminService();
-        adminService.signUp("ADMIN", "BHAVIKA", "CHHATBAR");
-        adminService.printProfile(1);
+        AdminService deliveryAgentService = new AdminService();
+        deliveryAgentService.signUp("admin","Bhavika", "bhavika");
+        deliveryAgentService.logout("Bhavika");
+        deliveryAgentService.printProfile("Bhavika");
+        deliveryAgentService.signUp("admin","Akshay", "akshay");
+        deliveryAgentService.printProfile("Akshay");
 
-        CustomerService customerService = new CustomerService();
-        customerService.signUp("customer", "Rahul", "Dave");
-        customerService.printProfile(2);
 
-        DeliveryAgentService deliveryAgentService = new DeliveryAgentService();
-        deliveryAgentService.signUp("delivery_agent", "Priyank", "Jakhria");
-        deliveryAgentService.printProfile(3);
+
 
 //        User admin = UserFactory.createUser("admin", "Bhavika", "Chhatbar");
-//        User customer = UserFactory.createUser("customer", "Rahul", "Dave");
-//        User agent = UserFactory.createUser("delivery_agent", "Priyank", "Jakhria");
 //
 //
 //        System.out.println(admin.getUsername());
