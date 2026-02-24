@@ -2,6 +2,8 @@ package model.order;
 
 import util.IdGenerator;
 
+import java.awt.*;
+import java.util.Objects;
 import java.util.Set;
 
 public class MenuItem implements MenuComponent{
@@ -52,4 +54,20 @@ public class MenuItem implements MenuComponent{
     public void add(MenuComponent menuComponent) {
         System.out.println("Unsupported operation.");
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == this)
+            return true;
+        if(obj == null || obj.getClass() != getClass())
+            return false;
+        MenuItem ob = (MenuItem) obj;
+        return this.itemId.equals(ob.itemId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.itemId);
+    }
+    //    eqals and hash
 }
