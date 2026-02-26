@@ -1,7 +1,10 @@
 package panel;
 
+import exception.RestaurantClosedException;
+import exception.UserNotFoundException;
 import model.enums.OrderStatus;
 import model.enums.PaymentMode;
+import model.order.MenuCategory;
 import model.order.MenuComponent;
 import model.order.MenuItem;
 import model.order.Order;
@@ -149,11 +152,20 @@ public class AdminPanel {
     }
 
     private void login() {
+        if(!adminCreated){
+            System.out.println("Create admin first to login.");
+            return;
+        }
         System.out.print("Username: ");
         String username = scanner.nextLine().trim();
         System.out.print("Password: ");
         String password = scanner.nextLine().trim();
-        User user = adminService.login(username, password);
+        User user = null;
+        try {
+            user = adminService.login(username, password);
+        }catch (UserNotFoundException e){
+            System.out.println(e.getMessage());
+        }
         if (user instanceof Admin) {
             loggedInAdmin = (Admin) user;
             System.out.println("Admin logged in successfully!");
@@ -189,14 +201,15 @@ public class AdminPanel {
     }
 
     private void addMenuItem() {
-        System.out.print("Category name: ");
-        String categoryName = scanner.nextLine().trim();
+        displayCategoryList();
+        System.out.print("Category ID: ");
+        Integer categoryId = Integer.parseInt(scanner.nextLine().trim());
         System.out.print("Item name: ");
         String itemName = scanner.nextLine().trim();
         System.out.print("Item price: ");
         Double price = Double.parseDouble(scanner.nextLine().trim());
         MenuItem item = new MenuItem(itemName, price);
-        adminService.addMenuItemToCategory(categoryName, item);
+        adminService.addMenuItemToCategory(categoryId, item);
     }
 
     private void addCategory() {
@@ -378,6 +391,25 @@ public class AdminPanel {
     }
     private void viewRevenue(){
         System.out.println("Total Revenue: " + adminService.getRevenue());
-        return;
+    }
+
+    private void displayCategoryList() {
+        List<MenuComponent> categories =
+                adminService.getCategoryList(adminService.getMenu());
+        int totalWidth = 40;
+        System.out.println("+" + "-".repeat(totalWidth - 2) + "+");
+        System.out.printf("|%"+(totalWidth-2)+"s|\n", " CATEGORY LIST ");
+        System.out.println("+" + "-".repeat(totalWidth - 2) + "+");
+
+        System.out.printf("| %-6s | %-27s |\n", "ID", "Name");
+        System.out.println("+" + "-".repeat(8) + "+" + "-".repeat(29) + "+");
+
+        for (MenuComponent category : categories) {
+            System.out.printf("| %-6s | %-27s |\n",
+                    category.getId(),
+                    category.getName());
+        }
+
+        System.out.println("+" + "-".repeat(8) + "+" + "-".repeat(29) + "+");
     }
 }

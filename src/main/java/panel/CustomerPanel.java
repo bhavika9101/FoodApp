@@ -1,5 +1,7 @@
 package panel;
 
+import exception.EmptyCartException;
+import exception.UserNotFoundException;
 import model.enums.PaymentMode;
 import model.order.MenuComponent;
 import model.order.MenuItem;
@@ -83,13 +85,25 @@ public class CustomerPanel {
                 addToCart();
                 break;
             case "3":
-                viewCart();
+                try {
+                    viewCart();
+                } catch (EmptyCartException e) {
+                    throw new RuntimeException(e);
+                }
                 break;
             case "4":
-                removeFromCart();
+                try {
+                    removeFromCart();
+                } catch (EmptyCartException e) {
+                    throw new RuntimeException(e);
+                }
                 break;
             case "5":
-                placeOrder();
+                try {
+                    placeOrder();
+                }catch (EmptyCartException e){
+                    System.out.println(e.getMessage());
+                }
                 break;
             case "6":
                 viewMyOrders();
@@ -135,7 +149,12 @@ public class CustomerPanel {
         String username = scanner.nextLine().trim();
         System.out.print("Password: ");
         String password = scanner.nextLine().trim();
-        User user = customerService.login(username, password);
+        User user = null;
+        try {
+            user = customerService.login(username, password);
+        }catch (UserNotFoundException e){
+            System.out.println(e.getMessage());
+        }
         if (user instanceof Customer) {
             loggedInCustomer = (Customer) user;
             if (cartService == null) {
@@ -214,16 +233,18 @@ public class CustomerPanel {
         System.out.println("Added " + quantity + " x " + selectedItem.getName() + " to cart.");
     }
 
-    private void viewCart() {
+    private void viewCart() throws EmptyCartException {
+        if (cartService.isEmpty()) {
+            throw new EmptyCartException("Can't view empty cart.");
+        }
         System.out.println("\n--- Your Cart ---");
         cartService.printCart();
     }
 
-    private void removeFromCart() {
+    private void removeFromCart() throws EmptyCartException {
         Map<MenuItem, Integer> cartMap = cartService.getCartItemMap();
-        if (cartMap.isEmpty()) {
-            System.out.println("Your cart is empty.");
-            return;
+        if (cartService.isEmpty()) {
+            throw new EmptyCartException("Can't remove from empty cart.");
         }
         List<MenuItem> cartItems = new ArrayList<>(cartMap.keySet());
         System.out.println("\nCart Items:");
@@ -255,10 +276,9 @@ public class CustomerPanel {
         }
     }
 
-    private void placeOrder() {
+    private void placeOrder() throws EmptyCartException {
         if (cartService.isEmpty()) {
-            System.out.println("Your cart is empty. Add items first.");
-            return;
+            throw new EmptyCartException("No items in. Can't place order.");
         }
 
         System.out.println("\n--- Order Summary ---");

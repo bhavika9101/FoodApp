@@ -1,5 +1,6 @@
 package panel;
 
+import exception.UserNotFoundException;
 import model.user.DeliveryAgent;
 import model.user.User;
 import observer.DeliveryAgentObserver;
@@ -60,13 +61,14 @@ public class DeliveryAgentPanel {
 
             switch (choice) {
                 case "1":
-                    if(deliveryAgentCount >= 2){
-                        System.out.println("Can't have more than 2 delivery partners.");
-                        break;
-                    }
-                    if(signUp())
-                        deliveryAgentCount += 1;
-                    break;
+                    signUp();
+//                    if(deliveryAgentCount >= 2){
+//                        System.out.println("Can't have more than 2 delivery partners.");
+//                        break;
+//                    }
+//                    if(signUp())
+//                        deliveryAgentCount += 1;
+//                    break;
                 case "2":
                     login();
                     break;
@@ -145,7 +147,12 @@ public class DeliveryAgentPanel {
         String username = scanner.nextLine().trim();
         System.out.print("Password: ");
         String password = scanner.nextLine().trim();
-        User user = deliveryAgentService.login(username, password);
+        User user = null;
+        try {
+            user = deliveryAgentService.login(username, password);
+        }catch (UserNotFoundException e){
+            System.out.println(e.getMessage());
+        }
         if (user instanceof DeliveryAgent) {
             activeAgent = (DeliveryAgent) user;
 

@@ -10,4 +10,5 @@ public interface MenuComponent {
     Set<MenuComponent> getComponentSet();
     void print();
     void add(MenuComponent menuComponent);
+
 }

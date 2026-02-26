@@ -1,5 +1,6 @@
 package facade;
 
+import exception.RestaurantClosedException;
 import model.order.MenuCategory;
 import model.order.MenuComponent;
 import model.order.MenuItem;
@@ -118,10 +119,18 @@ public class FoodOrderingFacade {
                     runAdminPanel();
                     break;
                 case "2":
-                    runCustomerPanel();
+                    try {
+                        runCustomerPanel();
+                    }catch (RestaurantClosedException e){
+                        System.out.println(e.getMessage());
+                    }
                     break;
                 case "3":
-                    runDeliveryAgentPanel();
+                    try {
+                        runDeliveryAgentPanel();
+                    }catch (RestaurantClosedException e){
+                        System.out.println(e.getMessage());
+                    }
                     break;
                 case "4":
                     System.out.println("\nThank you for using the Food Ordering System. Goodbye!");
@@ -139,10 +148,9 @@ public class FoodOrderingFacade {
         }
     }
 
-    private void runCustomerPanel() {
+    private void runCustomerPanel() throws RestaurantClosedException {
         if (!adminPanel.isAdminLoggedIn()) {
-            System.out.println("\n[ERROR] Admin must log in first before customers can use the system.");
-            return;
+            throw new RestaurantClosedException("Admin must log in first before customers can use the system.");
         }
         Boolean backToMain = Boolean.FALSE;
         while (!backToMain) {
@@ -150,10 +158,9 @@ public class FoodOrderingFacade {
         }
     }
 
-    private void runDeliveryAgentPanel() {
+    private void runDeliveryAgentPanel() throws RestaurantClosedException{
         if (!adminPanel.isAdminLoggedIn()) {
-            System.out.println("\n[ERROR] Admin must log in first before delivery agents can use the system.");
-            return;
+            throw new RestaurantClosedException("Admin must log in first before delivery agents can use the system.");
         }
         Boolean backToMain = Boolean.FALSE;
         while (!backToMain) {

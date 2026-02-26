@@ -1,5 +1,6 @@
 package service;
 
+import exception.UserNotFoundException;
 import model.user.User;
 import model.user.UserFactory;
 
@@ -35,11 +36,10 @@ public abstract class BaseService {
         return user;
     }
 
-    public User login(String username, String password) {
+    public User login(String username, String password) throws UserNotFoundException {
         User user = allUserMap.get(username);
         if (user == null) {
-            System.out.println("No such user. Please sign up first.");
-            return null;
+            throw new UserNotFoundException("No such user. Please sign up first.");
         }
         if (loggedInUserSet.contains(user)) {
             System.out.println("User already logged in.");
@@ -63,11 +63,10 @@ public abstract class BaseService {
         System.out.println(username + " logged out successfully.");
     }
 
-    public void printProfile(String username) {
+    public void printProfile(String username) throws UserNotFoundException{
         User user = allUserMap.get(username);
         if (user == null) {
-            System.out.println("No such user.");
-            return;
+            throw new UserNotFoundException("No such user in system.");
         }
         System.out.println("----------------------------------------------------------------");
         System.out.printf("|%-15s %-45s |%n", " User ID: ", user.getUserId());

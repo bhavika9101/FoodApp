@@ -10,6 +10,7 @@ import model.user.DeliveryAgent;
 import model.user.User;
 import model.enums.DeliveryAgentStatus;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -43,17 +44,17 @@ public class AdminService extends BaseService {
     public MenuComponent getMenu() {
         return menu;
     }
-    public void addMenuItemToCategory(String categoryName, MenuItem item) {
+    public void addMenuItemToCategory(Integer categoryId, MenuItem item) {
         if (menu == null) {
             System.out.println("Menu not initialized.");
             return;
         }
-        MenuComponent category = findCategory(menu, categoryName);
+        MenuComponent category = findCategory(menu, categoryId);
         if (category != null) {
             category.add(item);
-            System.out.println("'" + item.getName() + "' added to '" + categoryName + "' successfully.");
+            System.out.println("'" + item.getName() + "' added to '" + categoryId + "' successfully.");
         } else {
-            System.out.println("Category '" + categoryName + "' not found.");
+            System.out.println("Category '" + categoryId + "' not found.");
         }
     }
 
@@ -67,13 +68,13 @@ public class AdminService extends BaseService {
         System.out.println("Category '" + categoryName + "' added to menu.");
     }
 
-    private MenuComponent findCategory(MenuComponent component, String name) {
-        if (component.isComponent() && component.getName().equalsIgnoreCase(name)) {
+    private MenuComponent findCategory(MenuComponent component, Integer categoryId) {
+        if (component.isComponent() && component.getId().equals(categoryId)) {
             return component;
         }
         if (component.isComponent() && component.getComponentSet() != null) {
             for (MenuComponent child : component.getComponentSet()) {
-                MenuComponent found = findCategory(child, name);
+                MenuComponent found = findCategory(child, categoryId);
                 if (found != null)
                     return found;
             }
@@ -194,5 +195,18 @@ public class AdminService extends BaseService {
     }
     public Double getRevenue(){
         return revenue;
+    }
+
+    public List<MenuComponent> getCategoryList(MenuComponent menu){
+        List<MenuComponent> categories = new ArrayList<>();
+        for(MenuComponent menuComponent: menu.getComponentSet()){
+            if(menuComponent instanceof MenuCategory){
+                categories.add(menuComponent);
+                if(menuComponent.getComponentSet() != null){
+                    categories.addAll(getCategoryList(menuComponent));
+                }
+            }
+        }
+        return categories;
     }
 }

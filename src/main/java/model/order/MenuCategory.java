@@ -2,6 +2,7 @@ package model.order;
 
 import util.IdGenerator;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class MenuCategory implements MenuComponent {
@@ -53,5 +54,19 @@ public class MenuCategory implements MenuComponent {
 
     public void add(MenuComponent menuComponent){
         componentSet.add(menuComponent);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof MenuCategory)){
+            return false;
+        }
+        MenuComponent menuObj = (MenuComponent) obj;
+        return menuObj.getName().equals(this.getName()) && menuObj.getId().equals(this.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(categoryId, categoryName);
     }
 }
