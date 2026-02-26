@@ -5,6 +5,7 @@ import util.IdGenerator;
 import java.util.HashMap;
 import java.util.Map;
 
+//not using currently
 public class Cart {
     private static final IdGenerator idGenerator = new IdGenerator();
 

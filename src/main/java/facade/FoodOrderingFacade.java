@@ -94,24 +94,22 @@ public class FoodOrderingFacade {
         System.out.println("================================================");
         System.out.println("     WELCOME TO FOOD ORDERING SYSTEM");
         System.out.println("================================================");
-        System.out.println("  Default discounts loaded:");
+        System.out.println("Default discounts loaded:");
         System.out.println("    10% off on orders above Rs.500");
         System.out.println("    15% off on orders above Rs.1000");
         System.out.println("    20% off on orders above Rs.2000");
         System.out.println("================================================\n");
 
-        Boolean running = Boolean.TRUE;
-
-        while (running) {
-            System.out.println("\n--------------------------------------------");
+        while (true) {
+            System.out.println("--------------------------------------------");
             System.out.println("           MAIN MENU");
             System.out.println("--------------------------------------------");
-            System.out.println("  1. Admin Panel");
-            System.out.println("  2. Customer Panel");
-            System.out.println("  3. Delivery Agent Panel");
-            System.out.println("  4. Exit");
+            System.out.println("1. Admin Panel");
+            System.out.println("2. Customer Panel");
+            System.out.println("3. Delivery Agent Panel");
+            System.out.println("4. Exit");
             System.out.println("--------------------------------------------");
-            System.out.print("  Choose panel: ");
+            System.out.print("Choose panel: ");
 
             String choice = scanner.nextLine().trim();
 
@@ -126,14 +124,12 @@ public class FoodOrderingFacade {
                     runDeliveryAgentPanel();
                     break;
                 case "4":
-                    running = Boolean.FALSE;
-                    System.out.println("\n  Thank you for using the Food Ordering System. Goodbye!");
-                    break;
+                    System.out.println("\nThank you for using the Food Ordering System. Goodbye!");
+                    return;
                 default:
-                    System.out.println("  Invalid choice. Please try again.");
+                    System.out.println("Invalid choice. Please try again.");
             }
         }
-        scanner.close();
     }
 
     private void runAdminPanel() {
@@ -145,7 +141,7 @@ public class FoodOrderingFacade {
 
     private void runCustomerPanel() {
         if (!adminPanel.isAdminLoggedIn()) {
-            System.out.println("\n  [ERROR] Admin must log in first before customers can use the system.");
+            System.out.println("\n[ERROR] Admin must log in first before customers can use the system.");
             return;
         }
         Boolean backToMain = Boolean.FALSE;
@@ -156,7 +152,7 @@ public class FoodOrderingFacade {
 
     private void runDeliveryAgentPanel() {
         if (!adminPanel.isAdminLoggedIn()) {
-            System.out.println("\n  [ERROR] Admin must log in first before delivery agents can use the system.");
+            System.out.println("\n[ERROR] Admin must log in first before delivery agents can use the system.");
             return;
         }
         Boolean backToMain = Boolean.FALSE;

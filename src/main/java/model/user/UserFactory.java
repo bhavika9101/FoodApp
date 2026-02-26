@@ -21,7 +21,6 @@ public class UserFactory {
 //    add limit of two for agent
     public static User createUser(String type, String username, String password){
         BiFunction<String, String,User> constructor = registry.get(type);
-//        handler constructor null
         return constructor.apply(username, password);
     }
 

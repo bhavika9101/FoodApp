@@ -70,5 +70,10 @@ public class MenuItem implements MenuComponent {
     public int hashCode() {
         return Objects.hash(this.itemId);
     }
+
+    @Override
+    public String toString() {
+        return String.format("%-5s %-30s %-10s\n", getId(), getName(), getPrice());
+    }
     // eqals and hash
 }

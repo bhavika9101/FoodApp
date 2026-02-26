@@ -17,16 +17,16 @@ public abstract class BaseService {
 
     public User signUp(String type, String username, String password) {
         if (globalUsernameRegistry.contains(username)) {
-            System.out.println("  Username '" + username + "' is already taken. Please choose a different username.");
+            System.out.println("Username '" + username + "' is already taken. Please choose a different username.");
             return null;
         }
         if (allUserMap.containsKey(username)) {
-            System.out.println("  User already exists. Please login.");
+            System.out.println("User already exists. Please login.");
             return null;
         }
         User user = UserFactory.createUser(type.toUpperCase(), username, password);
         if (user == null) {
-            System.out.println("  Failed to create user.");
+            System.out.println("Failed to create user.");
             return null;
         }
         globalUsernameRegistry.add(username);

@@ -1,5 +1,7 @@
 package panel;
 
+import model.enums.OrderStatus;
+import model.enums.PaymentMode;
 import model.order.MenuComponent;
 import model.order.MenuItem;
 import model.order.Order;
@@ -16,6 +18,7 @@ import service.OrderService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Scanner;
 
 public class AdminPanel {
@@ -25,6 +28,8 @@ public class AdminPanel {
     private final DeliveryAgentService deliveryAgentService;
     private final Scanner scanner;
     private Admin loggedInAdmin;
+    private Boolean adminCreated;
+
 
     public AdminPanel(AdminService adminService, OrderService orderService,
             CustomerService customerService, DeliveryAgentService deliveryAgentService,
@@ -33,6 +38,7 @@ public class AdminPanel {
         this.orderService = orderService;
         this.customerService = customerService;
         this.deliveryAgentService = deliveryAgentService;
+        adminCreated = false;
         this.scanner = scanner;
     }
 
@@ -44,7 +50,8 @@ public class AdminPanel {
         if (loggedInAdmin == null) {
             System.out.println("Admin is not logged in.");
             System.out.println("1. Login");
-            System.out.println("2. Sign Up");
+            if(!adminCreated)
+                System.out.println("2. Sign Up");
             System.out.println("0. Back to Main Menu");
             System.out.print("Choose: ");
             String choice = scanner.nextLine().trim();
@@ -54,7 +61,11 @@ public class AdminPanel {
                     login();
                     break;
                 case "2":
-                    signUp();
+                    if(adminCreated){
+                        System.out.println("Admin signed up already. Please log in.");
+                        break;
+                    }
+                    adminCreated = signUp();
                     break;
                 case "0":
                     return Boolean.TRUE;
@@ -72,10 +83,14 @@ public class AdminPanel {
         System.out.println("5. Add Discount");
         System.out.println("6. Remove Discount");
         System.out.println("7. View Pending Orders");
-        System.out.println("8. Approve Order (auto-queues for delivery)");
-        System.out.println("9. View All Order History");
-        System.out.println("10. View All Profiles");
-        System.out.println("11. Logout");
+        System.out.println("8. Approve Order and add to Queue");
+        System.out.println("9. View Order queue (j)");
+        System.out.println("10. View All Order History");
+        System.out.println("11. View an order (j)");
+        System.out.println("12. View All Profiles");
+//        System.out.println("13. View a Profile (j)");
+//        System.out.println("14. View revenue details (j)");
+        System.out.println("15. Logout");
         System.out.println("0. Back to Main Menu");
         System.out.print("Choose: ");
         String choice = scanner.nextLine().trim();
@@ -106,12 +121,24 @@ public class AdminPanel {
                 approveOrder();
                 break;
             case "9":
-                viewAllOrderHistory();
+                viewDeliveryQueue();
                 break;
             case "10":
-                viewAllProfiles();
+                viewAllOrderHistory();
                 break;
             case "11":
+                viewOrderDetails();
+                break;
+            case "12":
+                viewAllProfiles();
+                break;
+            case "13":
+//                view an prof
+                break;
+            case "14":
+//                revenue
+                break;
+            case "15":
                 logout();
                 break;
             case "0":
@@ -134,7 +161,7 @@ public class AdminPanel {
         }
     }
 
-    private void signUp() {
+    private boolean signUp() {
         System.out.print("Username: ");
         String username = scanner.nextLine().trim();
         System.out.print("Password: ");
@@ -143,7 +170,9 @@ public class AdminPanel {
         if (user instanceof Admin) {
             loggedInAdmin = (Admin) user;
             System.out.println("Admin account created and logged in!");
+            return true;
         }
+        return false;
     }
 
     private void logout() {
@@ -317,5 +346,35 @@ public class AdminPanel {
 
     public Boolean isAdminLoggedIn() {
         return loggedInAdmin != null;
+    }
+
+//    yet to test
+    private void viewDeliveryQueue(){
+        Queue<Integer> deliveryQueue = adminService.getDeliveryQueue();
+        if(deliveryQueue.isEmpty()){
+            System.out.println("No orders in queue.");
+            return;
+        }
+        for(Integer orderId: deliveryQueue){
+            System.out.printf("%-5s %-20s %-50s %-10s %-5s", "ID", "Customer", "Address", "Amount", "Payment Mode\n");
+            System.out.println(orderService.getOrderInfo(orderId));
+        }
+    }
+
+//    yet to test
+    private void viewOrderDetails(){
+        System.out.print("Enter order id: ");
+        Integer orderId = Integer.parseInt(scanner.nextLine().trim());
+        String details = orderService.getOrderDetails(orderId);
+        if(details == null){
+            System.out.println("No such order");
+            return;
+        }
+        System.out.println(details);
+    }
+//incomplete
+    private void viewAProfile(){
+        System.out.print("Enter user id: ");
+        Integer userId = Integer.parseInt(scanner.nextLine().trim());
     }
 }

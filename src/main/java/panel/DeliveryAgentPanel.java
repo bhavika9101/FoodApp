@@ -19,6 +19,7 @@ public class DeliveryAgentPanel {
     private final EventManager eventManager;
     private final Scanner scanner;
     private DeliveryAgent activeAgent;
+    private Integer deliveryAgentCount;
 
     public DeliveryAgentPanel(DeliveryAgentService deliveryAgentService,
             OrderService orderService, AdminService adminService, EventManager eventManager, Scanner scanner) {
@@ -26,6 +27,7 @@ public class DeliveryAgentPanel {
         this.orderService = orderService;
         this.adminService = adminService;
         this.eventManager = eventManager;
+        this.deliveryAgentCount = 0;
         this.scanner = scanner;
     }
 
@@ -45,7 +47,9 @@ public class DeliveryAgentPanel {
                 }
                 System.out.println("----------");
             }
-            System.out.println("1. Sign Up");
+            if(deliveryAgentCount < 2){
+                System.out.println("1. Sign Up");
+            }
             System.out.println("2. Login");
             if (!loggedInAgents.isEmpty()) {
                 System.out.println("3. Switch to logged-in agent");
@@ -56,7 +60,12 @@ public class DeliveryAgentPanel {
 
             switch (choice) {
                 case "1":
-                    signUp();
+                    if(deliveryAgentCount >= 2){
+                        System.out.println("Can't have more than 2 delivery partners.");
+                        break;
+                    }
+                    if(signUp())
+                        deliveryAgentCount += 1;
                     break;
                 case "2":
                     login();
@@ -111,7 +120,7 @@ public class DeliveryAgentPanel {
         return Boolean.FALSE;
     }
 
-    private void signUp() {
+    private Boolean signUp() {
         System.out.print("Username: ");
         String username = scanner.nextLine().trim();
         System.out.print("Password: ");
@@ -126,13 +135,15 @@ public class DeliveryAgentPanel {
             System.out.println("Delivery agent account created and logged in!");
 
             adminService.processDeliveryQueue();
+            return true;
         }
+        return false;
     }
 
     private void login() {
-        System.out.print("  Username: ");
+        System.out.print("Username: ");
         String username = scanner.nextLine().trim();
-        System.out.print("  Password: ");
+        System.out.print("Password: ");
         String password = scanner.nextLine().trim();
         User user = deliveryAgentService.login(username, password);
         if (user instanceof DeliveryAgent) {

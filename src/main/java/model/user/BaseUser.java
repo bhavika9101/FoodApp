@@ -31,6 +31,7 @@ public abstract class BaseUser implements User {
         return userId;
     }
 
+//
     @Override
     public boolean equals(Object obj) {
         if(this == obj)

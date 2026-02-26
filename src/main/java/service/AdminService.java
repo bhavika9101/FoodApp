@@ -19,7 +19,7 @@ public class AdminService extends BaseService {
     private final OrderService orderService;
     private final DeliveryAgentService deliveryAgentService;
     private final Queue<Integer> deliveryQueue = new LinkedList<>();
-
+//    map user id and user object
     public AdminService(OrderService orderService, DeliveryAgentService deliveryAgentService) {
         this.orderService = orderService;
         this.deliveryAgentService = deliveryAgentService;
@@ -172,7 +172,7 @@ public class AdminService extends BaseService {
         Order nextOrder = orderService.getOrderById(nextOrderId);
         if (nextOrder != null) {
             assignOrderToAgent(nextOrder, availableAgent);
-            System.out.println("\n  [AUTO-ASSIGNED] Queued order #" + nextOrderId
+            System.out.println("\n[AUTO-ASSIGNED] Queued order #" + nextOrderId
                     + " assigned to agent: " + availableAgent.getUsername());
         }
     }
