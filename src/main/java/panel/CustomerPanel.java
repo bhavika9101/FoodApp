@@ -5,6 +5,8 @@ import model.order.MenuComponent;
 import model.order.MenuItem;
 import model.order.Order;
 import model.payment.Payment;
+import model.payment.PaymentFactory;
+import model.payment.PaymentStrategy;
 import model.user.Customer;
 import model.user.User;
 import observer.CustomerObserver;
@@ -283,6 +285,7 @@ public class CustomerPanel {
         System.out.print("Choose: ");
         String paymentChoice = scanner.nextLine().trim();
         PaymentMode paymentMode;
+        PaymentStrategy paymentStrategy;
         if ("1".equals(paymentChoice)) {
             paymentMode = PaymentMode.CASH;
         } else if ("2".equals(paymentChoice)) {
@@ -291,8 +294,9 @@ public class CustomerPanel {
             System.out.println("Invalid payment method. Order cancelled.");
             return;
         }
+        paymentStrategy = PaymentFactory.createPayment(paymentMode.toString());
 
-        Payment payment = new Payment(null, finalAmount, paymentMode);
+        Payment payment = new Payment(null, finalAmount, paymentMode, paymentStrategy);
         payment.processPayment();
 
         Order order = new Order(

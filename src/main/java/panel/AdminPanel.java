@@ -30,7 +30,6 @@ public class AdminPanel {
     private Admin loggedInAdmin;
     private Boolean adminCreated;
 
-
     public AdminPanel(AdminService adminService, OrderService orderService,
             CustomerService customerService, DeliveryAgentService deliveryAgentService,
             Scanner scanner) {

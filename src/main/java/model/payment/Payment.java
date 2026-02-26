@@ -5,22 +5,24 @@ import util.IdGenerator;
 
 public class Payment {
     private static final IdGenerator idGenerator = new IdGenerator();
-
+    private PaymentStrategy strategy;
     private final Integer paymentId;
     private final Integer orderId;
     private final Double amount;
     private final PaymentMode paymentMode;
     private Boolean isCompleted;
 
-    public Payment(Integer orderId, Double amount, PaymentMode paymentMode) {
+    public Payment(Integer orderId, Double amount, PaymentMode paymentMode, PaymentStrategy strategy) {
         this.paymentId = idGenerator.generateId();
         this.orderId = orderId;
         this.amount = amount;
         this.paymentMode = paymentMode;
         this.isCompleted = Boolean.FALSE;
+        this.strategy = strategy;
     }
 
     public void processPayment() {
+        strategy.pay(amount);
         this.isCompleted = Boolean.TRUE;
         System.out.println("---------------------------------------------");
         System.out.println("  Payment Successful!");
