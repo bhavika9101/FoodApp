@@ -19,10 +19,12 @@ public class AdminService extends BaseService {
     private final OrderService orderService;
     private final DeliveryAgentService deliveryAgentService;
     private final Queue<Integer> deliveryQueue = new LinkedList<>();
+    private Double revenue;
 //    map user id and user object
     public AdminService(OrderService orderService, DeliveryAgentService deliveryAgentService) {
         this.orderService = orderService;
         this.deliveryAgentService = deliveryAgentService;
+        revenue = 0.0;
     }
 
     @Override
@@ -116,7 +118,7 @@ public class AdminService extends BaseService {
         }
         orderService.updateOrderStatus(orderId, OrderStatus.APPROVED);
         System.out.println("Order #" + orderId + " approved successfully.");
-
+        revenue += order.getFinalAmount();
         DeliveryAgent availableAgent = deliveryAgentService.findAvailableAgent();
         if (availableAgent != null) {
             assignOrderToAgent(order, availableAgent);
@@ -189,5 +191,8 @@ public class AdminService extends BaseService {
                 collectAllMenuItems(child, itemList);
             }
         }
+    }
+    public Double getRevenue(){
+        return revenue;
     }
 }

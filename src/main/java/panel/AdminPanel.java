@@ -84,12 +84,12 @@ public class AdminPanel {
         System.out.println("6. Remove Discount");
         System.out.println("7. View Pending Orders");
         System.out.println("8. Approve Order and add to Queue");
-        System.out.println("9. View Order queue (j)");
+        System.out.println("9. View Order queue (x)");
         System.out.println("10. View All Order History");
-        System.out.println("11. View an order (j)");
+        System.out.println("11. View an order (x)");
         System.out.println("12. View All Profiles");
-//        System.out.println("13. View a Profile (j)");
-//        System.out.println("14. View revenue details (j)");
+//        System.out.println("13. View a Profile (x)");
+        System.out.println("14. View revenue details (x)");
         System.out.println("15. Logout");
         System.out.println("0. Back to Main Menu");
         System.out.print("Choose: ");
@@ -136,7 +136,7 @@ public class AdminPanel {
 //                view an prof
                 break;
             case "14":
-//                revenue
+                viewRevenue();
                 break;
             case "15":
                 logout();
@@ -376,5 +376,9 @@ public class AdminPanel {
     private void viewAProfile(){
         System.out.print("Enter user id: ");
         Integer userId = Integer.parseInt(scanner.nextLine().trim());
+    }
+    private void viewRevenue(){
+        System.out.println("Total Revenue: " + adminService.getRevenue());
+        return;
     }
 }
