@@ -1,0 +1,321 @@
+package panel;
+
+import model.order.MenuComponent;
+import model.order.MenuItem;
+import model.order.Order;
+import model.user.Admin;
+import model.user.Customer;
+import model.user.DeliveryAgent;
+import model.user.User;
+import service.AdminService;
+import service.CustomerService;
+import service.DeliveryAgentService;
+import service.DiscountService;
+
+import service.OrderService;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
+public class AdminPanel {
+    private final AdminService adminService;
+    private final OrderService orderService;
+    private final CustomerService customerService;
+    private final DeliveryAgentService deliveryAgentService;
+    private final Scanner scanner;
+    private Admin loggedInAdmin;
+
+    public AdminPanel(AdminService adminService, OrderService orderService,
+            CustomerService customerService, DeliveryAgentService deliveryAgentService,
+            Scanner scanner) {
+        this.adminService = adminService;
+        this.orderService = orderService;
+        this.customerService = customerService;
+        this.deliveryAgentService = deliveryAgentService;
+        this.scanner = scanner;
+    }
+
+    public Boolean run() {
+        System.out.println("\n============================================");
+        System.out.println("          ADMIN PANEL");
+        System.out.println("============================================");
+
+        if (loggedInAdmin == null) {
+            System.out.println("Admin is not logged in.");
+            System.out.println("1. Login");
+            System.out.println("2. Sign Up");
+            System.out.println("0. Back to Main Menu");
+            System.out.print("Choose: ");
+            String choice = scanner.nextLine().trim();
+
+            switch (choice) {
+                case "1":
+                    login();
+                    break;
+                case "2":
+                    signUp();
+                    break;
+                case "0":
+                    return Boolean.TRUE;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+            return Boolean.FALSE;
+        }
+
+        System.out.println("Logged in as: " + loggedInAdmin.getUsername());
+        System.out.println("1. View Menu");
+        System.out.println("2. Add Menu Item");
+        System.out.println("3. Add Category");
+        System.out.println("4. View Discounts");
+        System.out.println("5. Add Discount");
+        System.out.println("6. Remove Discount");
+        System.out.println("7. View Pending Orders");
+        System.out.println("8. Approve Order (auto-queues for delivery)");
+        System.out.println("9. View All Order History");
+        System.out.println("10. View All Profiles");
+        System.out.println("11. Logout");
+        System.out.println("0. Back to Main Menu");
+        System.out.print("Choose: ");
+        String choice = scanner.nextLine().trim();
+
+        switch (choice) {
+            case "1":
+                viewMenu();
+                break;
+            case "2":
+                addMenuItem();
+                break;
+            case "3":
+                addCategory();
+                break;
+            case "4":
+                viewDiscounts();
+                break;
+            case "5":
+                addDiscount();
+                break;
+            case "6":
+                removeDiscount();
+                break;
+            case "7":
+                viewPendingOrders();
+                break;
+            case "8":
+                approveOrder();
+                break;
+            case "9":
+                viewAllOrderHistory();
+                break;
+            case "10":
+                viewAllProfiles();
+                break;
+            case "11":
+                logout();
+                break;
+            case "0":
+                return Boolean.TRUE;
+            default:
+                System.out.println("Invalid choice.");
+        }
+        return Boolean.FALSE;
+    }
+
+    private void login() {
+        System.out.print("Username: ");
+        String username = scanner.nextLine().trim();
+        System.out.print("Password: ");
+        String password = scanner.nextLine().trim();
+        User user = adminService.login(username, password);
+        if (user instanceof Admin) {
+            loggedInAdmin = (Admin) user;
+            System.out.println("Admin logged in successfully!");
+        }
+    }
+
+    private void signUp() {
+        System.out.print("Username: ");
+        String username = scanner.nextLine().trim();
+        System.out.print("Password: ");
+        String password = scanner.nextLine().trim();
+        User user = adminService.signUp("admin", username, password);
+        if (user instanceof Admin) {
+            loggedInAdmin = (Admin) user;
+            System.out.println("Admin account created and logged in!");
+        }
+    }
+
+    private void logout() {
+        adminService.logout(loggedInAdmin.getUsername());
+        loggedInAdmin = null;
+    }
+
+    private void viewMenu() {
+        MenuComponent menu = adminService.getMenu();
+        if (menu != null) {
+            menu.print();
+        } else {
+            System.out.println("Menu not initialized.");
+        }
+    }
+
+    private void addMenuItem() {
+        System.out.print("Category name: ");
+        String categoryName = scanner.nextLine().trim();
+        System.out.print("Item name: ");
+        String itemName = scanner.nextLine().trim();
+        System.out.print("Item price: ");
+        Double price = Double.parseDouble(scanner.nextLine().trim());
+        MenuItem item = new MenuItem(itemName, price);
+        adminService.addMenuItemToCategory(categoryName, item);
+    }
+
+    private void addCategory() {
+        System.out.print("New category name: ");
+        String categoryName = scanner.nextLine().trim();
+        adminService.addCategory(categoryName);
+    }
+
+    private void viewDiscounts() {
+        DiscountService.printAllDiscounts();
+    }
+
+    private void addDiscount() {
+        System.out.print("Price threshold (Rs): ");
+        Double threshold = Double.parseDouble(scanner.nextLine().trim());
+        System.out.print("Discount percentage: ");
+        Double percentage = Double.parseDouble(scanner.nextLine().trim());
+        Double rate = percentage / 100.0;
+        adminService.addDiscount(threshold, rate);
+    }
+
+    private void removeDiscount() {
+        System.out.print("Price threshold to remove: ");
+        Double threshold = Double.parseDouble(scanner.nextLine().trim());
+        adminService.removeDiscount(threshold);
+    }
+
+    private void viewPendingOrders() {
+        List<Order> pendingOrders = adminService.viewPendingOrders();
+        List<Order> approvedOrders = adminService.viewApprovedOrders();
+
+        if (pendingOrders.isEmpty() && approvedOrders.isEmpty()) {
+            System.out.println("No pending or approved orders.");
+            return;
+        }
+        if (!pendingOrders.isEmpty()) {
+            System.out.println("\n--- PLACED Orders ---");
+            for (Order order : pendingOrders) {
+                printOrderSummary(order);
+            }
+        }
+        if (!approvedOrders.isEmpty()) {
+            System.out.println("\n--- APPROVED Orders ---");
+            for (Order order : approvedOrders) {
+                printOrderSummary(order);
+            }
+        }
+    }
+
+    private void printOrderSummary(Order order) {
+        System.out.println("Order #" + order.getOrderId()
+                + " | Customer: " + order.getCustomerName()
+                + " | Amount: Rs." + String.format("%.2f", order.getFinalAmount())
+                + " | Status: " + order.getStatus().getDisplayName());
+    }
+
+    private void approveOrder() {
+        System.out.print("Enter Order ID to approve: ");
+        Integer orderId = Integer.parseInt(scanner.nextLine().trim());
+        adminService.approveOrder(orderId);
+    }
+
+    private void viewAllOrderHistory() {
+        List<Order> allOrders = orderService.getAllOrders();
+        if (allOrders.isEmpty()) {
+            System.out.println("No orders in the system yet.");
+            return;
+        }
+        System.out.println("\n=============================================");
+        System.out.println("          ALL ORDER HISTORY");
+        System.out.println("=============================================");
+        System.out.printf("Total Orders: %d%n%n", allOrders.size());
+
+        for (Order order : allOrders) {
+            System.out.println("---------------------------------------------");
+            System.out.println("Order #" + order.getOrderId());
+            System.out.println("Customer      : " + order.getCustomerName());
+            System.out.println("Address        : " + order.getCustomerAddress());
+            System.out.println("Status         : " + order.getStatus().getDisplayName());
+            System.out.println("Payment Mode   : "
+                    + (order.getPaymentMode() != null ? order.getPaymentMode().getDisplayName() : "N/A"));
+            System.out.println("Delivery Agent : "
+                    + (order.getAssignedAgentName() != null ? order.getAssignedAgentName() : "Not Assigned"));
+
+            System.out.println("  Items:");
+            for (Map.Entry<MenuItem, Integer> entry : order.getItems().entrySet()) {
+                MenuItem item = entry.getKey();
+                Integer qty = entry.getValue();
+                System.out.printf("    - %-20s x%-3d = Rs.%.2f%n",
+                        item.getName(), qty, item.getPrice() * qty);
+            }
+            System.out.printf("  Subtotal       : Rs.%.2f%n", order.getSubtotal());
+            System.out.printf("  Discount       : Rs.%.2f%n", order.getDiscountAmount());
+            System.out.printf("  Final Amount   : Rs.%.2f%n", order.getFinalAmount());
+        }
+        System.out.println("=============================================");
+    }
+    private void viewAllProfiles() {
+        System.out.println("\n=============================================");
+        System.out.println("           ALL USER PROFILES");
+        System.out.println("=============================================");
+
+        System.out.println("\n--- ADMIN ---");
+        if (adminService.getAllUserMap().isEmpty()) {
+            System.out.println("No admin users.");
+        } else {
+            java.util.Set<User> uniqueAdmins = new java.util.LinkedHashSet<>(adminService.getAllUserMap().values());
+            for (User user : uniqueAdmins) {
+                System.out.printf("ID: %-5d | Username: %-15s | Status: %s%n",
+                        user.getUserId(), user.getUsername(),
+                        adminService.findLoggedInUser(user.getUsername()) != null ? "Online" : "Offline");
+            }
+        }
+
+        System.out.println("\n--- CUSTOMERS ---");
+        if (customerService.getAllUserMap().isEmpty()) {
+            System.out.println("No customers registered.");
+        } else {
+            for (User user : customerService.getAllUserMap().values()) {
+                Customer customer = (Customer) user;
+                Integer orderCount = orderService.getOrdersByCustomerId(customer.getUserId()).size();
+                System.out.printf("ID: %-5d | Username: %-15s | Address: %-20s | Orders: %d | Status: %s%n",
+                        customer.getUserId(), customer.getUsername(),
+                        customer.getAddress() != null ? customer.getAddress() : "N/A",
+                        orderCount,
+                        customerService.findLoggedInUser(customer.getUsername()) != null ? "Online" : "Offline");
+            }
+        }
+
+        System.out.println("\n--- DELIVERY AGENTS ---");
+        if (deliveryAgentService.getAllUserMap().isEmpty()) {
+            System.out.println("No delivery agents registered.");
+        } else {
+            for (User user : deliveryAgentService.getAllUserMap().values()) {
+                DeliveryAgent agent = (DeliveryAgent) user;
+                System.out.printf(
+                        "  ID: %-5d | Username: %-15s | Delivery Status: %-12s | Current Order: %s | Status: %s%n",
+                        agent.getUserId(), agent.getUsername(),
+                        agent.getStatus().getDisplayName(),
+                        agent.getCurrentOrderId() != null ? "#" + agent.getCurrentOrderId() : "None",
+                        deliveryAgentService.findLoggedInUser(agent.getUsername()) != null ? "Online" : "Offline");
+            }
+        }
+        System.out.println("\n=============================================");
+    }
+
+    public Boolean isAdminLoggedIn() {
+        return loggedInAdmin != null;
+    }
+}

@@ -2,18 +2,19 @@ package model.order;
 
 import util.IdGenerator;
 
-import java.awt.*;
 import java.util.Objects;
 import java.util.Set;
 
-public class MenuItem implements MenuComponent{
+public class MenuItem implements MenuComponent {
     private static final IdGenerator idGenerator = new IdGenerator();
     private final Integer itemId;
     private String itemName;
     private Double itemPrice;
-    public MenuItem(){
+
+    public MenuItem() {
         this.itemId = idGenerator.generateId();
     }
+
     public MenuItem(String itemName, Double itemPrice) {
         this();
         this.itemName = itemName;
@@ -57,9 +58,9 @@ public class MenuItem implements MenuComponent{
 
     @Override
     public boolean equals(Object obj) {
-        if(obj == this)
+        if (obj == this)
             return true;
-        if(obj == null || obj.getClass() != getClass())
+        if (obj == null || obj.getClass() != getClass())
             return false;
         MenuItem ob = (MenuItem) obj;
         return this.itemId.equals(ob.itemId);
@@ -69,5 +70,5 @@ public class MenuItem implements MenuComponent{
     public int hashCode() {
         return Objects.hash(this.itemId);
     }
-    //    eqals and hash
+    // eqals and hash
 }

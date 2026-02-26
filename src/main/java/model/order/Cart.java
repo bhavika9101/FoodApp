@@ -1,32 +1,41 @@
 package model.order;
 
-import model.payment.Discount;
 import util.IdGenerator;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 public class Cart {
     private static final IdGenerator idGenerator = new IdGenerator();
 
-    private Integer cartId;
-    private Map<MenuItem, Integer> cartItemList;
+    private final Integer cartId;
+    private Map<MenuItem, Integer> cartItemMap;
     private Integer customerId;
 
-    public Cart(){
+    public Cart() {
         this.cartId = idGenerator.generateId();
+        this.cartItemMap = new HashMap<>();
     }
-    public Cart(Map<MenuItem, Integer> cartItemList, Integer customerId){
-        this.cartItemList = cartItemList;
+
+    public Cart(Map<MenuItem, Integer> cartItemMap, Integer customerId) {
+        this();
+        this.cartItemMap = cartItemMap;
         this.customerId = customerId;
     }
+
     public Integer getCartId() {
         return cartId;
     }
-    public Map<MenuItem, Integer> getCartItemList() {
-        return cartItemList;
+
+    public Map<MenuItem, Integer> getCartItemMap() {
+        return cartItemMap;
     }
+
     public Integer getCustomerId() {
         return customerId;
+    }
+
+    public void setCustomerId(Integer customerId) {
+        this.customerId = customerId;
     }
 }

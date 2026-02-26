@@ -1,12 +1,21 @@
 package model.user;
 
-import model.user.BaseUser;
-
 public class Customer extends BaseUser {
-    public Customer(){
+    private String address;
+
+    public Customer() {
         super();
     }
-    public Customer(String customerName, String password){
+
+    public Customer(String customerName, String password) {
         super(customerName, password);
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }
