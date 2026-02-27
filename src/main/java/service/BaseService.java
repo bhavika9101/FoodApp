@@ -17,6 +17,10 @@ public abstract class BaseService {
     private final Set<User> loggedInUserSet = new HashSet<>();
 
     public User signUp(String type, String username, String password) {
+        if(!password.matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{6,}$")){
+            System.out.println("Password must contain at least 6 characters, a number, a char, a special symbol.");
+            return null;
+        }
         if (globalUsernameRegistry.contains(username)) {
             System.out.println("Username '" + username + "' is already taken. Please choose a different username.");
             return null;

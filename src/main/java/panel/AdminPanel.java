@@ -1,10 +1,7 @@
 package panel;
 
-import exception.RestaurantClosedException;
+
 import exception.UserNotFoundException;
-import model.enums.OrderStatus;
-import model.enums.PaymentMode;
-import model.order.MenuCategory;
 import model.order.MenuComponent;
 import model.order.MenuItem;
 import model.order.Order;
@@ -86,12 +83,12 @@ public class AdminPanel {
         System.out.println("6. Remove Discount");
         System.out.println("7. View Pending Orders");
         System.out.println("8. Approve Order and add to Queue");
-        System.out.println("9. View Order queue (x)");
+        System.out.println("9. View Order queue");
         System.out.println("10. View All Order History");
-        System.out.println("11. View an order (x)");
+        System.out.println("11. View an order");
         System.out.println("12. View All Profiles");
-//        System.out.println("13. View a Profile (x)");
-        System.out.println("14. View revenue details (x)");
+        System.out.println("13. View a Profile");
+        System.out.println("14. View revenue");
         System.out.println("15. Logout");
         System.out.println("0. Back to Main Menu");
         System.out.print("Choose: ");
@@ -135,7 +132,11 @@ public class AdminPanel {
                 viewAllProfiles();
                 break;
             case "13":
-//                view an prof
+                try {
+                    viewAProfile();
+                } catch (UserNotFoundException e) {
+                    System.out.println(e.getMessage());
+                }
                 break;
             case "14":
                 viewRevenue();
@@ -385,9 +386,10 @@ public class AdminPanel {
         System.out.println(details);
     }
 //incomplete
-    private void viewAProfile(){
-        System.out.print("Enter user id: ");
-        Integer userId = Integer.parseInt(scanner.nextLine().trim());
+    private void viewAProfile() throws UserNotFoundException {
+        System.out.print("Enter username: ");
+        String username = scanner.nextLine().trim();
+        adminService.printProfile(username);
     }
     private void viewRevenue(){
         System.out.println("Total Revenue: " + adminService.getRevenue());
