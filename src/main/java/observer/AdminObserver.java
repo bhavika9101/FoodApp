@@ -1,6 +1,7 @@
 package observer;
 
 import model.order.Order;
+import service.AdminService;
 
 public class AdminObserver implements Observer {
     private final String adminName;
@@ -12,11 +13,13 @@ public class AdminObserver implements Observer {
     @Override
     public void update(String eventType, Order order) {
         switch (eventType) {
-            case "ORDER_PLACED" -> System.out.println("\n[ADMIN NOTIFICATION] New order #" + order.getOrderId()
+            case "ORDER_PLACED": System.out.println("\n[ADMIN NOTIFICATION] New order #" + order.getOrderId()
                     + " placed by customer " + order.getCustomerName());
-            case "ORDER_DELIVERED" -> System.out.println("\n[ADMIN NOTIFICATION] Order #" + order.getOrderId()
+            case "ORDER_DELIVERED":
+                System.out.println("\n[ADMIN NOTIFICATION] Order #" + order.getOrderId()
                     + " has been delivered successfully.");
-            default -> {
+
+            default: {
             }
         }
     }

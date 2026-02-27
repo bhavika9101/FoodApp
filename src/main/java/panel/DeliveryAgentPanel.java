@@ -62,13 +62,7 @@ public class DeliveryAgentPanel {
             switch (choice) {
                 case "1":
                     signUp();
-//                    if(deliveryAgentCount >= 2){
-//                        System.out.println("Can't have more than 2 delivery partners.");
-//                        break;
-//                    }
-//                    if(signUp())
-//                        deliveryAgentCount += 1;
-//                    break;
+                    break;
                 case "2":
                     login();
                     break;
@@ -93,7 +87,8 @@ public class DeliveryAgentPanel {
         System.out.println("2. Start Delivery (Pick Up Order)");
         System.out.println("3. Mark Order as Delivered");
         System.out.println("4. Switch Agent");
-        System.out.println("5. Logout");
+        System.out.println("4. Show gross earning");
+        System.out.println("6. Logout");
         System.out.println("0. Back to Main Menu");
         System.out.print("Choose: ");
         String choice = scanner.nextLine().trim();
@@ -112,6 +107,9 @@ public class DeliveryAgentPanel {
                 switchToOtherAgent();
                 break;
             case "5":
+                showGrossEarning();
+                break;
+            case "6":
                 logout();
                 break;
             case "0":
@@ -120,6 +118,10 @@ public class DeliveryAgentPanel {
                 System.out.println("Invalid choice.");
         }
         return Boolean.FALSE;
+    }
+
+    private void showGrossEarning() {
+        System.out.println("Gross earning for " + activeAgent.getUsername() + ": "+ deliveryAgentService.getGrossEarning(activeAgent));
     }
 
     private Boolean signUp() {

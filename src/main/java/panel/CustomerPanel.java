@@ -306,9 +306,12 @@ public class CustomerPanel {
         String paymentChoice = scanner.nextLine().trim();
         PaymentMode paymentMode;
         PaymentStrategy paymentStrategy;
+        String paymentIdentifier = null;
         if ("1".equals(paymentChoice)) {
             paymentMode = PaymentMode.CASH;
         } else if ("2".equals(paymentChoice)) {
+            System.out.println("Enter upi id: ");
+            paymentIdentifier = scanner.nextLine().trim();
             paymentMode = PaymentMode.UPI;
         } else {
             System.out.println("Invalid payment method. Order cancelled.");
@@ -316,7 +319,7 @@ public class CustomerPanel {
         }
         paymentStrategy = PaymentFactory.createPayment(paymentMode.toString());
 
-        Payment payment = new Payment(null, finalAmount, paymentMode, paymentStrategy);
+        Payment payment = new Payment(null, finalAmount, paymentMode, paymentStrategy, paymentIdentifier);
         payment.processPayment();
 
         Order order = new Order(

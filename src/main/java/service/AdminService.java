@@ -52,7 +52,7 @@ public class AdminService extends BaseService {
         MenuComponent category = findCategory(menu, categoryId);
         if (category != null) {
             category.add(item);
-            System.out.println("'" + item.getName() + "' added to '" + categoryId + "' successfully.");
+            System.out.println("'" + item.getName() + "' added to '" + category.getName() + "' successfully.");
         } else {
             System.out.println("Category '" + categoryId + "' not found.");
         }
@@ -64,7 +64,10 @@ public class AdminService extends BaseService {
             return;
         }
         MenuComponent newCategory = new MenuCategory(categoryName);
-        menu.add(newCategory);
+        if(!menu.add(newCategory)){
+            System.out.println("Category '" + categoryName + "' already exists.");
+            return;
+        }
         System.out.println("Category '" + categoryName + "' added to menu.");
     }
 

@@ -52,8 +52,9 @@ public class MenuItem implements MenuComponent {
     }
 
     @Override
-    public void add(MenuComponent menuComponent) {
+    public boolean add(MenuComponent menuComponent) {
         System.out.println("Unsupported operation.");
+        return false;
     }
 
     @Override

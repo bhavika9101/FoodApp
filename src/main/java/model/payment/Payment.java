@@ -11,14 +11,16 @@ public class Payment {
     private final Double amount;
     private final PaymentMode paymentMode;
     private Boolean isCompleted;
+    private String paymentIdentifier; // for upi id, bank account number..
 
-    public Payment(Integer orderId, Double amount, PaymentMode paymentMode, PaymentStrategy strategy) {
+    public Payment(Integer orderId, Double amount, PaymentMode paymentMode, PaymentStrategy strategy, String paymentIdentifier) {
         this.paymentId = idGenerator.generateId();
         this.orderId = orderId;
         this.amount = amount;
         this.paymentMode = paymentMode;
         this.isCompleted = Boolean.FALSE;
         this.strategy = strategy;
+        this.paymentIdentifier = paymentIdentifier;
     }
 
     public void processPayment() {
@@ -29,6 +31,9 @@ public class Payment {
         System.out.println("  Payment ID : " + paymentId);
         System.out.println("  Amount     : Rs." + String.format("%.2f", amount));
         System.out.println("  Mode       : " + paymentMode.getDisplayName());
+        if(!paymentMode.equals(PaymentMode.CASH)){
+            System.out.println("  From       : " + paymentIdentifier);
+        }
         System.out.println("---------------------------------------------");
     }
 

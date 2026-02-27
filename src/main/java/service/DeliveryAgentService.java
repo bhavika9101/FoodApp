@@ -66,8 +66,8 @@ public class DeliveryAgentService extends BaseService {
         agent.setStatus(DeliveryAgentStatus.AVAILABLE);
         agent.setCurrentOrderId(null);
         orderService.updateOrderStatus(currentOrderId, model.enums.OrderStatus.DELIVERED);
-        System.out.println(
-                "Order #" + currentOrderId + " marked as DELIVERED. You are now available for new deliveries.");
+        System.out.println("Order #" + currentOrderId + " marked as DELIVERED. You are now available for new deliveries.");
+        payDeliveryAgent(agent, order.getFinalAmount());
 
         if (adminService != null) {
             adminService.processDeliveryQueue();
@@ -111,5 +111,13 @@ public class DeliveryAgentService extends BaseService {
         } else {
             System.out.println("Order is not ready for delivery.");
         }
+    }
+
+    public void payDeliveryAgent(DeliveryAgent agent, Double billAmount){
+        agent.incrementGrossEarning((billAmount*5)/100);
+    }
+
+    public Double getGrossEarning(DeliveryAgent agent){
+        return agent.getGrossEarning();
     }
 }

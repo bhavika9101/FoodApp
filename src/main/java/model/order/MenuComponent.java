@@ -9,6 +9,6 @@ public interface MenuComponent {
     Boolean isComponent();
     Set<MenuComponent> getComponentSet();
     void print();
-    void add(MenuComponent menuComponent);
+    boolean add(MenuComponent menuComponent);
 
 }

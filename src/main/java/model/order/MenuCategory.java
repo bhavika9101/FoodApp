@@ -52,21 +52,21 @@ public class MenuCategory implements MenuComponent {
         componentSet.forEach(MenuComponent::print);
     }
 
-    public void add(MenuComponent menuComponent){
-        componentSet.add(menuComponent);
+    public boolean add(MenuComponent menuComponent){
+       return componentSet.add(menuComponent);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if(!(obj instanceof MenuCategory)){
-            return false;
-        }
-        MenuComponent menuObj = (MenuComponent) obj;
-        return menuObj.getName().equals(this.getName()) && menuObj.getId().equals(this.getId());
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        MenuCategory that = (MenuCategory) obj;
+        return Objects.equals(this.categoryName, that.categoryName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(categoryId, categoryName);
+        return Objects.hash(categoryName);
     }
 }

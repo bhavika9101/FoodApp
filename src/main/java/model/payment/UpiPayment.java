@@ -5,4 +5,5 @@ public class UpiPayment implements PaymentStrategy{
     public void pay(Double amount) {
         System.out.println(amount + " paid via UPI.");
     }
+
 }
