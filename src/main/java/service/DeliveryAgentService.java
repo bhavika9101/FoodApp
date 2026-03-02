@@ -5,12 +5,15 @@ import model.order.Order;
 import model.user.DeliveryAgent;
 import model.user.User;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class DeliveryAgentService extends BaseService {
     private static Integer deliveryAgentCount = 0;
     private static final Integer DELIVERY_AGENT_COUNT_LIMIT = 2;
 
     @Override
-    public User signUp(String type, String username, String password) {
+    public User signUp(String type, String username, String password, String phone) {
         if (!type.equalsIgnoreCase("delivery_agent")) {
             System.out.println("Invalid user type. Sign Up unsuccessful.");
             return null;
@@ -19,7 +22,7 @@ public class DeliveryAgentService extends BaseService {
             System.out.println("Can't create more than two Delivery agents.");
             return null;
         }
-        User user = super.signUp(type, username, password);
+        User user = super.signUp(type, username, password, phone);
         if (user == null)
             return null;
         deliveryAgentCount++;
@@ -114,10 +117,32 @@ public class DeliveryAgentService extends BaseService {
     }
 
     public void payDeliveryAgent(DeliveryAgent agent, Double billAmount){
-        agent.incrementGrossEarning((billAmount*5)/100);
+        agent.incrementGrossEarning((billAmount*agent.getCommissionRate())/100);
     }
 
     public Double getGrossEarning(DeliveryAgent agent){
         return agent.getGrossEarning();
+    }
+
+    public void setDeliveryAgentBaseSalary(DeliveryAgent agent, Double baseSalary){
+        if(baseSalary<=0){
+            System.out.println("Base salary has to be above 0.");
+            return;
+        }
+        agent.setBaseSalary(baseSalary);
+    }
+
+    public void setDeliveryAgentCommissionRate(DeliveryAgent agent, Double commissionRate){
+        if(commissionRate<=0){
+            System.out.println("Commission rate has to be above 0.");
+            return;
+        }
+        agent.setCommissionRate(commissionRate);
+    }
+    public Map<String, Double> getDeliveryAgentFinanceInfo(DeliveryAgent agent){
+        Map<String, Double> financeInfo = new HashMap<>();
+        financeInfo.put("base_salary", agent.getBaseSalary());
+        financeInfo.put("commission_rate", agent.getCommissionRate());
+        return financeInfo;
     }
 }

@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 public class UserFactory {
-    private static final Map<String, BiFunction<String,String, User>> registry = new HashMap<>();
+    private static final Map<String, TriFunction<String,String, String, User>> registry = new HashMap<>();
 
     static {
         registry.put("ADMIN", Admin::getInstance);
@@ -19,13 +19,13 @@ public class UserFactory {
     }
 
 //    add limit of two for agent
-    public static User createUser(String type, String username, String password){
-        BiFunction<String, String,User> constructor = registry.get(type);
-        return constructor.apply(username, password);
+    public static User createUser(String type, String username, String password, String phoneNumber){
+        TriFunction<String, String, String, User> constructor = registry.get(type);
+        return constructor.apply(username, password, phoneNumber);
     }
 
 //    ocp maintained
-    public static void registerNewUserType(String type, BiFunction<String,String,User> constructor){
+    public static void registerNewUserType(String type, TriFunction<String,String, String,User> constructor){
         registry.put(type, constructor);
     }
 }

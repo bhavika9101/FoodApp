@@ -9,13 +9,15 @@ public abstract class BaseUser implements User {
     private final Integer userId;
     private String username;
     private String password;
+    private String phoneNumber;
     public BaseUser(){
         this.userId = idGenerator.generateId();
     }
-    public BaseUser(String customerName, String password){
+    public BaseUser(String customerName, String password, String phoneNumber){
         this();
         this.username = customerName;
         this.password = password;
+        this.phoneNumber = phoneNumber;
     }
     @Override
     public String getUsername() {
@@ -31,7 +33,24 @@ public abstract class BaseUser implements User {
         return userId;
     }
 
-//
+    @Override
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    //
     @Override
     public boolean equals(Object obj) {
         if(this == obj)
@@ -39,7 +58,7 @@ public abstract class BaseUser implements User {
         if(obj == null || getClass() != obj.getClass())
             return false;
         User user = (User) obj;
-        return user.getUserId().equals(this.getUserId());
+        return user.getUserId().equals(this.getUserId()) && user.getPhoneNumber().equals(this.getPhoneNumber());
     }
 
     @Override

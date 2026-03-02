@@ -5,12 +5,12 @@ import model.user.Customer;
 
 public class CustomerService extends BaseService {
     @Override
-    public User signUp(String type, String username, String password) {
+    public User signUp(String type, String username, String password, String phone) {
         if (!type.equalsIgnoreCase("customer")) {
             System.out.println("Invalid user type. Sign Up unsuccessful.");
             return null;
         }
-        return super.signUp(type, username, password);
+        return super.signUp(type, username, password, phone);
     }
 
     public Customer getCustomerByUsername(String username) {

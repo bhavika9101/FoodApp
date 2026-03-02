@@ -2,7 +2,8 @@ package model.enums;
 
 public enum DeliveryAgentStatus {
     AVAILABLE("Available"),
-    ON_DELIVERY("On Delivery");
+    ON_DELIVERY("On Delivery"),
+    UNAVAILABLE("Unavailable");
 
     private final String displayName;
 

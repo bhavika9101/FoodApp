@@ -7,8 +7,8 @@ public class Customer extends BaseUser {
         super();
     }
 
-    public Customer(String customerName, String password) {
-        super(customerName, password);
+    public Customer(String customerName, String password, String phoneNumber) {
+        super(customerName, password, phoneNumber);
     }
 
     public String getAddress() {

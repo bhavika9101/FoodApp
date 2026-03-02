@@ -15,10 +15,7 @@ import observer.CustomerObserver;
 import observer.EventManager;
 import service.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class CustomerPanel {
     private final CustomerService customerService;
@@ -72,7 +69,8 @@ public class CustomerPanel {
         System.out.println("4. Remove Item from Cart");
         System.out.println("5. Place Order");
         System.out.println("6. View My Orders");
-        System.out.println("7. Logout");
+        System.out.println("7. Edit customer profile");
+        System.out.println("8. Logout");
         System.out.println("0. Back to Main Menu");
         System.out.print("Choose: ");
         String choice = scanner.nextLine().trim();
@@ -109,6 +107,9 @@ public class CustomerPanel {
                 viewMyOrders();
                 break;
             case "7":
+                editCustomerProfile();
+                break;
+            case "8":
                 logout();
                 break;
             case "0":
@@ -124,7 +125,9 @@ public class CustomerPanel {
         String username = scanner.nextLine().trim();
         System.out.print("Password: ");
         String password = scanner.nextLine().trim();
-        User user = customerService.signUp("customer", username, password);
+        System.out.print("Phone Number: ");
+        String phone = scanner.nextLine().trim();
+        User user = customerService.signUp("customer", username, password, phone);
         if (user instanceof Customer) {
             loggedInCustomer = (Customer) user;
             System.out.print("Enter your delivery address: ");
@@ -351,5 +354,26 @@ public class CustomerPanel {
                     + " | Status: " + order.getStatus().getDisplayName()
                     + (order.getAssignedAgentName() != null ? " | Agent: " + order.getAssignedAgentName() : ""));
         }
+    }
+    private void editCustomerProfile(){
+        System.out.println("Enter current password: ");
+        String currentPassword = scanner.nextLine().trim();
+        if(!loggedInCustomer.getPassword().equals(currentPassword)){
+            System.out.println("Wrong password. Attempt to edit profile failed.");
+            return;
+        }
+        System.out.println("New username (enter 0 to keep old one): ");
+        String username = scanner.nextLine().trim();
+        System.out.println("New password (enter 0 to keep old one): ");
+        String password = scanner.nextLine().trim();
+        System.out.println("New phone number (enter 0 to keep old one): ");
+        String phoneNumber = scanner.nextLine().trim();
+
+        Map<String, String> updateInfo = new HashMap<>();
+        updateInfo.put("username", username);
+        updateInfo.put("password", password);
+        updateInfo.put("phone_number", phoneNumber);
+
+        customerService.editUserProfile(loggedInCustomer, updateInfo);
     }
 }

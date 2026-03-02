@@ -6,14 +6,12 @@ import model.order.MenuComponent;
 import model.order.MenuItem;
 import model.order.Order;
 import model.payment.Discount;
+import model.user.Admin;
 import model.user.DeliveryAgent;
 import model.user.User;
 import model.enums.DeliveryAgentStatus;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 public class AdminService extends BaseService {
     private MenuComponent menu;
@@ -29,12 +27,12 @@ public class AdminService extends BaseService {
     }
 
     @Override
-    public User signUp(String type, String username, String password) {
+    public User signUp(String type, String username, String password, String phone) {
         if (!type.equalsIgnoreCase("admin")) {
             System.out.println("Invalid user type. Sign Up unsuccessful.");
             return null;
         }
-        return super.signUp(type, username, password);
+        return super.signUp(type, username, password, phone);
     }
 
     public void setMenu(MenuComponent menu) {
@@ -187,7 +185,7 @@ public class AdminService extends BaseService {
         return deliveryQueue;
     }
 
-    public void collectAllMenuItems(MenuComponent component, java.util.List<MenuItem> itemList) {
+    public void collectAllMenuItems(MenuComponent component, List<MenuItem> itemList) {
         if (!component.isComponent()) {
             itemList.add((MenuItem) component);
         } else if (component.getComponentSet() != null) {
@@ -212,4 +210,6 @@ public class AdminService extends BaseService {
         }
         return categories;
     }
+
+
 }

@@ -8,16 +8,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseService {
     private static final Set<String> globalUsernameRegistry = new HashSet<>();
 
     private final Map<String, User> allUserMap = new HashMap<>();
     private final Set<User> loggedInUserSet = new HashSet<>();
+    private final String passwordPattern = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{6,}$";
 
-    public User signUp(String type, String username, String password) {
-        if(!password.matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{6,}$")){
+    public User signUp(String type, String username, String password, String phoneNumber) {
+        if(!password.matches(passwordPattern)){
             System.out.println("Password must contain at least 6 characters, a number, a char, a special symbol.");
             return null;
         }
@@ -25,11 +25,17 @@ public abstract class BaseService {
             System.out.println("Username '" + username + "' is already taken. Please choose a different username.");
             return null;
         }
+        if(phoneNumber.length() != 10 ||
+                Integer.parseInt(phoneNumber.substring(0, 1)) > 9
+                        || Integer.parseInt(phoneNumber.substring(0, 1))<6){
+            System.out.println("Enter phone number with length 10 and first 6 <= number <= 9");
+            return null;
+        }
         if (allUserMap.containsKey(username)) {
             System.out.println("User already exists. Please login.");
             return null;
         }
-        User user = UserFactory.createUser(type.toUpperCase(), username, password);
+        User user = UserFactory.createUser(type.toUpperCase(), username, password, phoneNumber);
         if (user == null) {
             System.out.println("Failed to create user.");
             return null;
@@ -73,9 +79,10 @@ public abstract class BaseService {
             throw new UserNotFoundException("No such user in system.");
         }
         System.out.println("----------------------------------------------------------------");
-        System.out.printf("|%-15s %-45s |%n", " User ID: ", user.getUserId());
-        System.out.printf("|%-15s %-45s |%n", " Username: ", user.getUsername());
-        System.out.printf("|%-15s %-45s |%n", " User type: ", user.getClass().getSimpleName());
+        System.out.printf("|%-15s %-45s |%n", "User ID: ", user.getUserId());
+        System.out.printf("|%-15s %-45s |%n", "User type: ", user.getClass().getSimpleName());
+        System.out.printf("|%-15s %-45s |%n", "Username: ", user.getUsername());
+        System.out.printf("|%-15s %-45s |%n", "Phone No.: ", user.getPhoneNumber());
         System.out.println("----------------------------------------------------------------");
     }
 
@@ -103,5 +110,27 @@ public abstract class BaseService {
 
     public Map<String, User> getAllUserMap() {
         return allUserMap;
+    }
+
+    public void editUserProfile(User user, Map<String, String> updateInfo){
+        String username = updateInfo.get("username");
+        String password = updateInfo.get("password");
+        String phoneNumber = updateInfo.get("phone_number");
+
+        if(!username.equals("0") && !globalUsernameRegistry.contains(username)){
+            globalUsernameRegistry.remove(user.getUsername());
+            globalUsernameRegistry.add(username);
+            user.setUsername(username);
+        }
+
+        if(!password.equals("0") && password.matches(passwordPattern)){
+            user.setPassword(password);
+        }
+
+        if(phoneNumber.length() != 10 ||
+                Integer.parseInt(phoneNumber.substring(0, 1)) > 9
+                || Integer.parseInt(phoneNumber.substring(0, 1))<6){
+            user.setPhoneNumber(phoneNumber);
+        }
     }
 }

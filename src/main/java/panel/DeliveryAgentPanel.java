@@ -9,9 +9,7 @@ import service.AdminService;
 import service.DeliveryAgentService;
 import service.OrderService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class DeliveryAgentPanel {
     private final DeliveryAgentService deliveryAgentService;
@@ -87,8 +85,9 @@ public class DeliveryAgentPanel {
         System.out.println("2. Start Delivery (Pick Up Order)");
         System.out.println("3. Mark Order as Delivered");
         System.out.println("4. Switch Agent");
-        System.out.println("4. Show gross earning");
-        System.out.println("6. Logout");
+        System.out.println("5. Show gross earning");
+        System.out.println("6. Edit delivery agent profile");
+        System.out.println("7. Logout");
         System.out.println("0. Back to Main Menu");
         System.out.print("Choose: ");
         String choice = scanner.nextLine().trim();
@@ -110,6 +109,9 @@ public class DeliveryAgentPanel {
                 showGrossEarning();
                 break;
             case "6":
+                editDeliveryAgentProfile();
+                break;
+            case "7":
                 logout();
                 break;
             case "0":
@@ -129,7 +131,9 @@ public class DeliveryAgentPanel {
         String username = scanner.nextLine().trim();
         System.out.print("Password: ");
         String password = scanner.nextLine().trim();
-        User user = deliveryAgentService.signUp("delivery_agent", username, password);
+        System.out.print("Phone Number: ");
+        String phone = scanner.nextLine().trim();
+        User user = deliveryAgentService.signUp("delivery_agent", username, password, phone);
         if (user instanceof DeliveryAgent) {
             activeAgent = (DeliveryAgent) user;
             DeliveryAgentObserver observer = new DeliveryAgentObserver(activeAgent.getUserId(),
@@ -222,5 +226,26 @@ public class DeliveryAgentPanel {
 
     private void markDelivered() {
         deliveryAgentService.markOrderAsDelivered(activeAgent, orderService, adminService);
+    }
+    private void editDeliveryAgentProfile(){
+        System.out.println("Enter current password: ");
+        String currentPassword = scanner.nextLine().trim();
+        if(!activeAgent.getPassword().equals(currentPassword)){
+            System.out.println("Wrong password. Attempt to edit profile failed.");
+            return;
+        }
+        System.out.println("New username (enter 0 to keep old one): ");
+        String username = scanner.nextLine().trim();
+        System.out.println("New password (enter 0 to keep old one): ");
+        String password = scanner.nextLine().trim();
+        System.out.println("New phone number (enter 0 to keep old one): ");
+        String phoneNumber = scanner.nextLine().trim();
+
+        Map<String, String> updateInfo = new HashMap<>();
+        updateInfo.put("username", username);
+        updateInfo.put("password", password);
+        updateInfo.put("phone_number", phoneNumber);
+
+        deliveryAgentService.editUserProfile(activeAgent, updateInfo);
     }
 }

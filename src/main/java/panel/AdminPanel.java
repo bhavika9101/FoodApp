@@ -16,10 +16,7 @@ import service.DiscountService;
 
 import service.OrderService;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Scanner;
+import java.util.*;
 
 public class AdminPanel {
     private final AdminService adminService;
@@ -75,81 +72,193 @@ public class AdminPanel {
         }
 
         System.out.println("Logged in as: " + loggedInAdmin.getUsername());
-        System.out.println("1. View Menu");
-        System.out.println("2. Add Menu Item");
-        System.out.println("3. Add Category");
-        System.out.println("4. View Discounts");
-        System.out.println("5. Add Discount");
-        System.out.println("6. Remove Discount");
-        System.out.println("7. View Pending Orders");
-        System.out.println("8. Approve Order and add to Queue");
-        System.out.println("9. View Order queue");
-        System.out.println("10. View All Order History");
-        System.out.println("11. View an order");
-        System.out.println("12. View All Profiles");
-        System.out.println("13. View a Profile");
-        System.out.println("14. View revenue");
-        System.out.println("15. Logout");
-        System.out.println("0. Back to Main Menu");
-        System.out.print("Choose: ");
+        System.out.println("""
+                1. Manage menu
+                2. Manage discounts
+                3. Manage orders
+                4. Manage profiles
+                5. Finances
+                6. Logout
+                0. Back to main menu
+                """);
+        System.out.println("Choose: ");
         String choice = scanner.nextLine().trim();
-
-        switch (choice) {
+        switch (choice){
             case "1":
-                viewMenu();
+                manageMenu();
                 break;
             case "2":
-                addMenuItem();
+                discountsMenu();
                 break;
             case "3":
-                addCategory();
+                ordersMenu();
                 break;
             case "4":
-                viewDiscounts();
+                profilesMenu();
                 break;
             case "5":
-                addDiscount();
+                financeMenu();
                 break;
             case "6":
-                removeDiscount();
-                break;
-            case "7":
-                viewPendingOrders();
-                break;
-            case "8":
-                approveOrder();
-                break;
-            case "9":
-                viewDeliveryQueue();
-                break;
-            case "10":
-                viewAllOrderHistory();
-                break;
-            case "11":
-                viewOrderDetails();
-                break;
-            case "12":
-                viewAllProfiles();
-                break;
-            case "13":
-                try {
-                    viewAProfile();
-                } catch (UserNotFoundException e) {
-                    System.out.println(e.getMessage());
-                }
-                break;
-            case "14":
-                viewRevenue();
-                break;
-            case "15":
                 logout();
                 break;
             case "0":
-                return Boolean.TRUE;
+                return true;
             default:
                 System.out.println("Invalid choice.");
         }
         return Boolean.FALSE;
+    }
+
+    private void manageMenu() {
+        while (true){
+            System.out.println("\n============================================");
+            System.out.println("          ADMIN PANEL - MANAGE MENU");
+            System.out.println("============================================");
+            System.out.println("1. View Menu");
+            System.out.println("2. Add Menu Item");
+            System.out.println("3. Add Category");
+            System.out.println("0. Back to admin menu");
+            System.out.println("Choose: ");
+            String choice = scanner.nextLine().trim();
+            switch (choice){
+                case "1":
+                    viewMenu();
+                    break;
+                case "2":
+                    addMenuItem();
+                    break;
+                case "3":
+                    addCategory();
+                    break;
+                case "0":
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
+    }
+    private void discountsMenu() {
+
+        while (true){
+            System.out.println("\n============================================");
+            System.out.println("          ADMIN PANEL - MANAGE DISCOUNTS");
+            System.out.println("============================================");
+            System.out.println("1. View discounts");
+            System.out.println("2. Add discount");
+            System.out.println("3. Remove discount");
+            System.out.println("0. Back to admin menu");
+            System.out.println("Choose: ");
+            String choice = scanner.nextLine().trim();
+            switch (choice){
+                case "1":
+                    viewDiscounts();
+                    break;
+                case "2":
+                    addDiscount();
+                    break;
+                case "3":
+                    removeDiscount();
+                    break;
+                case "0":
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
+    }
+    private void ordersMenu() {
+
+        while (true){
+            System.out.println("\n============================================");
+            System.out.println("          ADMIN PANEL - MANAGE ORDERS");
+            System.out.println("============================================");
+            System.out.println("1. View Pending Orders");
+            System.out.println("2. Approve Order and add to Queue");
+            System.out.println("3. View Order queue");
+            System.out.println("4. View All Order History");
+            System.out.println("5. View an order");
+            System.out.println("0. Back to main menu");
+            System.out.println("Choose: ");
+            String choice = scanner.nextLine().trim();
+            switch (choice){
+                case "1":
+                    viewPendingOrders();
+                    break;
+                case "2":
+                    approveOrder();
+                    break;
+                case "3":
+                    viewDeliveryQueue();
+                    break;
+                case "4":
+                    viewAllOrderHistory();
+                    break;
+                case "5":
+                    viewOrderDetails();
+                    break;
+                case "0":
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
+    }
+    private void profilesMenu() {
+        while (true){
+            System.out.println("\n============================================");
+            System.out.println("          ADMIN PANEL - MANAGE PROFILES");
+            System.out.println("============================================");
+            System.out.println("1. View All Profiles");
+            System.out.println("2. View a Profile");
+            System.out.println("3. Edit admin profile");
+            System.out.println("0. Back to main menu");
+            System.out.println("Choose: ");
+            String choice = scanner.nextLine().trim();
+            switch (choice){
+                case "1":
+                    viewAllProfiles();
+                    break;
+                case "2":
+                    try {
+                        viewAProfile();
+                    } catch (UserNotFoundException e) {
+                        System.err.println(e.getMessage());
+                    }
+                    break;
+                case "3":
+                    editAdminProfile();
+                    break;
+                case "0":
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
+    }
+    private void financeMenu() {
+        while (true){
+            System.out.println("\n============================================");
+            System.out.println("          ADMIN PANEL - MANAGE FINANCE");
+            System.out.println("============================================");
+            System.out.println("1. View revenue");
+            System.out.println("2. Manage Delivery partner's finance");
+            System.out.println("0. Back to main menu");
+            System.out.println("Choose: ");
+            String choice = scanner.nextLine().trim();
+            switch (choice){
+                case "1":
+                    viewRevenue();
+                    break;
+                case "2":
+                    manageDeliveryAgentFinance();
+                    break;
+                case "0":
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
     }
 
     private void login() {
@@ -178,7 +287,9 @@ public class AdminPanel {
         String username = scanner.nextLine().trim();
         System.out.print("Password: ");
         String password = scanner.nextLine().trim();
-        User user = adminService.signUp("admin", username, password);
+        System.out.print("Phone Number: ");
+        String phone = scanner.nextLine().trim();
+        User user = adminService.signUp("admin", username, password, phone);
         if (user instanceof Admin) {
             loggedInAdmin = (Admin) user;
             System.out.println("Admin account created and logged in!");
@@ -319,8 +430,9 @@ public class AdminPanel {
         } else {
             java.util.Set<User> uniqueAdmins = new java.util.LinkedHashSet<>(adminService.getAllUserMap().values());
             for (User user : uniqueAdmins) {
-                System.out.printf("ID: %-5d | Username: %-15s | Status: %s%n",
+                System.out.printf("ID: %-5d | Username: %-15s | Phone Number: %-15s | Status: %s%n",
                         user.getUserId(), user.getUsername(),
+                        user.getPhoneNumber(),
                         adminService.findLoggedInUser(user.getUsername()) != null ? "Online" : "Offline");
             }
         }
@@ -332,8 +444,9 @@ public class AdminPanel {
             for (User user : customerService.getAllUserMap().values()) {
                 Customer customer = (Customer) user;
                 Integer orderCount = orderService.getOrdersByCustomerId(customer.getUserId()).size();
-                System.out.printf("ID: %-5d | Username: %-15s | Address: %-20s | Orders: %d | Status: %s%n",
+                System.out.printf("ID: %-5d | Username: %-15s |  Phone Number: %-15s | Address: %-20s | Orders: %d | Status: %s%n",
                         customer.getUserId(), customer.getUsername(),
+                        customer.getPhoneNumber(),
                         customer.getAddress() != null ? customer.getAddress() : "N/A",
                         orderCount,
                         customerService.findLoggedInUser(customer.getUsername()) != null ? "Online" : "Offline");
@@ -347,8 +460,9 @@ public class AdminPanel {
             for (User user : deliveryAgentService.getAllUserMap().values()) {
                 DeliveryAgent agent = (DeliveryAgent) user;
                 System.out.printf(
-                        "  ID: %-5d | Username: %-15s | Delivery Status: %-12s | Current Order: %s | Status: %s%n",
+                        "ID: %-5d | Username: %-15s | Phone Number: %-15s | Delivery Status: %-12s | Current Order: %s | Status: %s%n",
                         agent.getUserId(), agent.getUsername(),
+                        agent.getPhoneNumber(),
                         agent.getStatus().getDisplayName(),
                         agent.getCurrentOrderId() != null ? "#" + agent.getCurrentOrderId() : "None",
                         deliveryAgentService.findLoggedInUser(agent.getUsername()) != null ? "Online" : "Offline");
@@ -392,6 +506,7 @@ public class AdminPanel {
         adminService.printProfile(username);
     }
     private void viewRevenue(){
+        System.out.println("Total orders: " + orderService.getAllOrders().size());
         System.out.println("Total Revenue: " + adminService.getRevenue());
     }
 
@@ -413,5 +528,43 @@ public class AdminPanel {
         }
 
         System.out.println("+" + "-".repeat(8) + "+" + "-".repeat(29) + "+");
+    }
+    private void manageDeliveryAgentFinance(){
+        System.out.println("Username: ");
+        DeliveryAgent agent = deliveryAgentService.getAgentByUsername(scanner.nextLine().trim());
+        if(agent == null){
+            System.out.println("No such agent in system.");
+            return;
+        }
+        Map<String, Double> financeInfo = deliveryAgentService.getDeliveryAgentFinanceInfo(agent);
+        System.out.println("Current base salary: " + financeInfo.get("base_salary"));
+        System.out.println("Current commission rate: " + financeInfo.get("commission_rate"));
+
+        System.out.println("Base salary: ");
+        deliveryAgentService.setDeliveryAgentBaseSalary(agent, Double.parseDouble(scanner.nextLine().trim()));
+        System.out.println("Commission rate: ");
+        deliveryAgentService.setDeliveryAgentCommissionRate(agent, Double.parseDouble(scanner.nextLine().trim()));
+    }
+
+    private void editAdminProfile(){
+        System.out.println("Enter current password: ");
+        String password = scanner.nextLine().trim();
+        if(!loggedInAdmin.getPassword().equals(password)){
+            System.out.println("Wrong password. Attempt to edit profile failed.");
+            return;
+        }
+        System.out.println("New username (enter 0 to keep old one): ");
+        String username = scanner.nextLine().trim();
+        System.out.println("New password (enter 0 to keep old one): ");
+        password = scanner.nextLine().trim();
+        System.out.println("New phone number (enter 0 to keep old one): ");
+        String phoneNumber = scanner.nextLine().trim();
+
+        Map<String, String> updateInfo = new HashMap<>();
+        updateInfo.put("username", username);
+        updateInfo.put("password", password);
+        updateInfo.put("phone_number", phoneNumber);
+
+        adminService.editUserProfile(loggedInAdmin, updateInfo);
     }
 }
