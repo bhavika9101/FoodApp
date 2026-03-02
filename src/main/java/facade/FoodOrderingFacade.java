@@ -122,14 +122,14 @@ public class FoodOrderingFacade {
                     try {
                         runCustomerPanel();
                     }catch (RestaurantClosedException e){
-                        System.out.println(e.getMessage());
+                        System.err.println(e.getMessage());
                     }
                     break;
                 case "3":
                     try {
                         runDeliveryAgentPanel();
                     }catch (RestaurantClosedException e){
-                        System.out.println(e.getMessage());
+                        System.err.println(e.getMessage());
                     }
                     break;
                 case "4":

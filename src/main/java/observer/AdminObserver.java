@@ -1,7 +1,6 @@
 package observer;
 
 import model.order.Order;
-import service.AdminService;
 
 public class AdminObserver implements Observer {
     private final String adminName;

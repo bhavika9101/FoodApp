@@ -274,7 +274,7 @@ public class AdminPanel {
         try {
             user = adminService.login(username, password);
         }catch (UserNotFoundException e){
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
         if (user instanceof Admin) {
             loggedInAdmin = (Admin) user;

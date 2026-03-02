@@ -86,21 +86,21 @@ public class CustomerPanel {
                 try {
                     viewCart();
                 } catch (EmptyCartException e) {
-                    throw new RuntimeException(e);
+                    System.err.println(e.getMessage());
                 }
                 break;
             case "4":
                 try {
                     removeFromCart();
                 } catch (EmptyCartException e) {
-                    throw new RuntimeException(e);
+                    System.err.println(e.getMessage());
                 }
                 break;
             case "5":
                 try {
                     placeOrder();
                 }catch (EmptyCartException e){
-                    System.out.println(e.getMessage());
+                    System.err.println(e.getMessage());
                 }
                 break;
             case "6":
@@ -156,7 +156,7 @@ public class CustomerPanel {
         try {
             user = customerService.login(username, password);
         }catch (UserNotFoundException e){
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
         if (user instanceof Customer) {
             loggedInCustomer = (Customer) user;

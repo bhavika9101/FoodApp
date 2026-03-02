@@ -11,6 +11,7 @@ import java.util.Set;
 
 public abstract class BaseService {
     private static final Set<String> globalUsernameRegistry = new HashSet<>();
+    private static final Set<String> globalPhoneNumberRegistry = new HashSet<>();
 
     private final Map<String, User> allUserMap = new HashMap<>();
     private final Set<User> loggedInUserSet = new HashSet<>();
@@ -31,6 +32,10 @@ public abstract class BaseService {
             System.out.println("Enter phone number with length 10 and first 6 <= number <= 9");
             return null;
         }
+        if (globalPhoneNumberRegistry.contains(phoneNumber)) {
+            System.out.println("Phone number '" + phoneNumber + "' is already registered. Please choose a different phone number.");
+            return null;
+        }
         if (allUserMap.containsKey(username)) {
             System.out.println("User already exists. Please login.");
             return null;
@@ -41,6 +46,7 @@ public abstract class BaseService {
             return null;
         }
         globalUsernameRegistry.add(username);
+        globalPhoneNumberRegistry.add(phoneNumber);
         allUserMap.put(username, user);
         loggedInUserSet.add(user);
         return user;
@@ -120,6 +126,8 @@ public abstract class BaseService {
         if(!username.equals("0") && !globalUsernameRegistry.contains(username)){
             globalUsernameRegistry.remove(user.getUsername());
             globalUsernameRegistry.add(username);
+            allUserMap.remove(user.getUsername());
+            allUserMap.put(username, user);
             user.setUsername(username);
         }
 
@@ -127,10 +135,12 @@ public abstract class BaseService {
             user.setPassword(password);
         }
 
-        if(phoneNumber.length() != 10 ||
-                Integer.parseInt(phoneNumber.substring(0, 1)) > 9
-                || Integer.parseInt(phoneNumber.substring(0, 1))<6){
+        if(phoneNumber.length() == 10 &&
+                Integer.parseInt(phoneNumber.substring(0, 1)) <= 9
+                && Integer.parseInt(phoneNumber.substring(0, 1))>=6){
+            globalPhoneNumberRegistry.remove(user.getPhoneNumber());
             user.setPhoneNumber(phoneNumber);
+            globalPhoneNumberRegistry.add(user.getPhoneNumber());
         }
     }
 }

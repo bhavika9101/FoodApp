@@ -157,7 +157,7 @@ public class DeliveryAgentPanel {
         try {
             user = deliveryAgentService.login(username, password);
         }catch (UserNotFoundException e){
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
         if (user instanceof DeliveryAgent) {
             activeAgent = (DeliveryAgent) user;

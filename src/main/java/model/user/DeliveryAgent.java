@@ -18,6 +18,8 @@ public class DeliveryAgent extends BaseUser {
         super(agentName, password, phoneNumber);
         this.status = DeliveryAgentStatus.UNAVAILABLE;
         this.grossEarning = 0.0;
+        this.baseSalary = 0.0;
+        this.commissionRate = 0.0;
     }
 
     public DeliveryAgentStatus getStatus() {

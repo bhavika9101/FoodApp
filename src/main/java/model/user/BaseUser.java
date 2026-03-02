@@ -58,7 +58,7 @@ public abstract class BaseUser implements User {
         if(obj == null || getClass() != obj.getClass())
             return false;
         User user = (User) obj;
-        return user.getUserId().equals(this.getUserId()) && user.getPhoneNumber().equals(this.getPhoneNumber());
+        return user.getUserId().equals(this.getUserId());
     }
 
     @Override

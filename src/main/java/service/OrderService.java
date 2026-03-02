@@ -97,7 +97,8 @@ public class OrderService {
         for (Map.Entry<MenuItem, Integer> itemMap: o.getItems().entrySet()){
             information.append(itemMap.getKey().toString())
                     .append("                  ")
-                    .append(itemMap.getValue());
+                    .append(itemMap.getValue())
+                    .append("\n");
         }
         information
                 .append("\nTotal: ")
