@@ -1,8 +1,4 @@
-# 🍕 FoodDeliveryApp — Complete Class Diagram
-
-> [!NOTE]
-> This diagram covers **all 43 Java classes** across 8 packages: `model.user`, `model.order`, `model.payment`, `model.enums`, `exception`, `observer`, `service`, `panel`, `facade`, and `util`. Every field, method, and relationship is shown.
-
+# 🍕 FoodDeliveryApp
 ---
 
 ## Full Class Diagram
