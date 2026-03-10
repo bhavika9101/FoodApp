@@ -1,8 +1,4 @@
-# 🍕 FoodDeliveryApp — Complete Class Diagram
-
-> [!NOTE]
-> This diagram covers **all 43 Java classes** across 8 packages: `model.user`, `model.order`, `model.payment`, `model.enums`, `exception`, `observer`, `service`, `panel`, `facade`, and `util`. Every field, method, and relationship is shown.
-
+# 🍕 FoodDeliveryApp
 ---
 
 ## Full Class Diagram
@@ -719,7 +715,6 @@ classDiagram
 | **Composite** | [MenuComponent](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/model/order/MenuComponent.java#5-15) ← [MenuItem](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/model/order/MenuItem.java#8-81), [MenuCategory](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/model/order/MenuCategory.java#8-73) | Tree structure for nested menu categories |
 | **Observer** | [Observer](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/observer/Observer.java#5-8) ← [AdminObserver](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/observer/AdminObserver.java#6-45), [CustomerObserver](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/observer/CustomerObserver.java#5-77), [DeliveryAgentObserver](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/observer/DeliveryAgentObserver.java#5-44) + [EventManager](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/observer/EventManager.java#10-36) | Event-driven order status notifications |
 | **Facade** | [FoodOrderingFacade](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/facade/FoodOrderingFacade.java#17-171) | Simplifies system startup and panel routing |
-| **Template Method** | [BaseService](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/service/BaseService.java#12-137) ← [AdminService](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/service/AdminService.java#16-216), [CustomerService](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/service/CustomerService.java#6-24), [DeliveryAgentService](file:///d:/Bhavika_Work/TSS%20practice/FoodDeliveryApp/FoodApp/src/main/java/service/DeliveryAgentService.java#11-149) | Common sign-up/login logic with overridable hooks |
 
 ---
 
