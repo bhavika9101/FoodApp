@@ -3,7 +3,7 @@ CREATE TYPE user_type_enum AS ENUM (
     'DELIVERY_AGENT',
     'ADMIN'
 );
-create table users(
+create table users
 	user_id serial primary key,
 	username varchar(100) not null,
 	password varchar(255) not null,
