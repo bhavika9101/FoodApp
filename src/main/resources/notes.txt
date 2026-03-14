@@ -1,0 +1,76 @@
+user:
+insert user
+validate user
+get user by username
+update user
+
+admin:
+get revenue (add col revenue)
+
+
+delivery agent:
+insert agent
+get agent by status
+update agent status
+update gross earning
+get gross earning
+update base salary
+update commission rate
+get base salary and commission rate
+
+customer:
+insert customer
+
+menu_category:
+insert
+join with menu_item (1mc)
+get by id
+get all
+
+
+menu_item:
+insert
+get all items with category (1mc)
+
+discount:
+insert
+delete
+
+orders:
+get orders where order status is pending
+get orders where order status is approved
+update order status - approved, ready for deli,
+insert order
+get order by id
+get order by id along with list of order items
+get order by customer_id
+get all
+
+order item:
+insert
+get all by order by id
+
+
+cart_item:
+insert
+update quantity (inc, dec)
+delete by
+delete by cart id
+calculate cart value(menu item)
+get cart items by customer
+
+cart:
+delete by customer_id
+
+
+discount:
+find discount by amount
+get all
+insert
+delete
+
+
+
+
+
+
