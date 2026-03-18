@@ -22,12 +22,21 @@ public class DeliveryAgent extends BaseUser {
         this.commissionRate = 0.0;
     }
 
+    public DeliveryAgent(int userId, String username, String password, String phoneNumber,
+            DeliveryAgentStatus status, double grossEarning, double baseSalary, double commissionRate) {
+        super(userId, username, password, phoneNumber);
+        this.status = status;
+        this.grossEarning = grossEarning;
+        this.baseSalary = baseSalary;
+        this.commissionRate = commissionRate;
+    }
+
     public DeliveryAgentStatus getStatus() {
         return status;
     }
 
     public void setStatus(DeliveryAgentStatus status) {
-        if(baseSalary == 0 && commissionRate == 0){
+        if (baseSalary == 0 && commissionRate == 0) {
             System.out.println("Pay your delivery partner base salary or commission rate.");
             this.status = DeliveryAgentStatus.UNAVAILABLE;
             return;
@@ -47,7 +56,7 @@ public class DeliveryAgent extends BaseUser {
         return this.status == DeliveryAgentStatus.AVAILABLE;
     }
 
-    public void incrementGrossEarning(Double amount){
+    public void incrementGrossEarning(Double amount) {
         this.grossEarning += amount;
     }
 

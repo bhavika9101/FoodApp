@@ -1,5 +1,7 @@
 package facade;
 
+import dao.MenuCategoryDAO;
+import dao.MenuItemDAO;
 import exception.RestaurantClosedException;
 import model.order.MenuCategory;
 import model.order.MenuComponent;
@@ -11,7 +13,10 @@ import panel.AdminPanel;
 import panel.CustomerPanel;
 import panel.DeliveryAgentPanel;
 import service.*;
+import util.DBConnection;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class FoodOrderingFacade {
@@ -31,7 +36,7 @@ public class FoodOrderingFacade {
         this.scanner = new Scanner(System.in);
         this.eventManager = new EventManager();
         this.deliveryAgentService = new DeliveryAgentService();
-        this.orderService = new OrderService(eventManager);
+        this.orderService = new OrderService();
         this.customerService = new CustomerService();
         this.adminService = new AdminService(orderService, deliveryAgentService);
 
@@ -49,40 +54,74 @@ public class FoodOrderingFacade {
     }
 
     private void initializeMenu() {
-        MenuComponent pizza = new MenuItem("Pizza", 250.0);
-        MenuComponent burger = new MenuItem("Burger", 150.0);
-        MenuComponent fries = new MenuItem("French Fries", 100.0);
-        MenuComponent sandwich = new MenuItem("Sandwich", 120.0);
-        MenuComponent fastFood = new MenuCategory("Fast Food");
-        fastFood.add(pizza);
-        fastFood.add(burger);
-        fastFood.add(fries);
-        fastFood.add(sandwich);
+        MenuCategoryDAO menuCategoryDAO = new MenuCategoryDAO();
+        MenuItemDAO menuItemDAO = new MenuItemDAO();
 
-        MenuComponent tea = new MenuItem("Tea", 30.0);
-        MenuComponent coffee = new MenuItem("Coffee", 60.0);
-        MenuComponent coldCoffee = new MenuItem("Cold Coffee", 90.0);
-        MenuComponent juice = new MenuItem("Fresh Juice", 80.0);
-        MenuComponent beverage = new MenuCategory("Beverages");
-        beverage.add(tea);
-        beverage.add(coffee);
-        beverage.add(coldCoffee);
-        beverage.add(juice);
+        try (ResultSet rs = menuCategoryDAO.getAll()) {
+            if (rs.next()) {
+                loadMenuFromDB(menuCategoryDAO, menuItemDAO);
+                return;
+            }
+        } catch (SQLException e) {
+            System.out.println("Error checking menu: " + e.getMessage());
+        }
 
-        MenuComponent biryani = new MenuItem("Biryani", 220.0);
-        MenuComponent dalRice = new MenuItem("Dal Rice", 150.0);
-        MenuComponent paneerTikka = new MenuItem("Paneer Tikka", 180.0);
-        MenuComponent mainCourse = new MenuCategory("Main Course");
-        mainCourse.add(biryani);
-        mainCourse.add(dalRice);
-        mainCourse.add(paneerTikka);
 
-        MenuComponent menu = new MenuCategory("--- FOOD MENU ---");
-        menu.add(fastFood);
-        menu.add(beverage);
-        menu.add(mainCourse);
+        try {
+            int fastFoodId = menuCategoryDAO.insert("Fast Food", null);
+            menuItemDAO.insert("Pizza", 250.0, fastFoodId);
+            menuItemDAO.insert("Burger", 150.0, fastFoodId);
+            menuItemDAO.insert("French Fries", 100.0, fastFoodId);
+            menuItemDAO.insert("Sandwich", 120.0, fastFoodId);
 
-        adminService.setMenu(menu);
+            int beverageId = menuCategoryDAO.insert("Beverages", null);
+            menuItemDAO.insert("Tea", 30.0, beverageId);
+            menuItemDAO.insert("Coffee", 60.0, beverageId);
+            menuItemDAO.insert("Cold Coffee", 90.0, beverageId);
+            menuItemDAO.insert("Fresh Juice", 80.0, beverageId);
+
+            int mainCourseId = menuCategoryDAO.insert("Main Course", null);
+            menuItemDAO.insert("Biryani", 220.0, mainCourseId);
+            menuItemDAO.insert("Dal Rice", 150.0, mainCourseId);
+            menuItemDAO.insert("Paneer Tikka", 180.0, mainCourseId);
+
+            System.out.println("Default menu seeded into database.");
+        } catch (SQLException e) {
+            System.out.println("Error seeding menu: " + e.getMessage());
+        }
+
+        loadMenuFromDB(menuCategoryDAO, menuItemDAO);
+    }
+
+    private void loadMenuFromDB(MenuCategoryDAO menuCategoryDAO, MenuItemDAO menuItemDAO) {
+        try {
+            MenuComponent rootMenu = new MenuCategory(0, "--- FOOD MENU ---");
+
+            try (ResultSet catRs = menuCategoryDAO.getAll()) {
+                while (catRs.next()) {
+                    int catId = catRs.getInt("category_id");
+                    String catName = catRs.getString("category_name");
+                    MenuComponent category = new MenuCategory(catId, catName);
+
+                    try (ResultSet itemRs = menuItemDAO.getAllWithCategory()) {
+                        while (itemRs.next()) {
+                            if (itemRs.getInt("category_id") == catId) {
+                                category.add(new MenuItem(
+                                        itemRs.getInt("item_id"),
+                                        itemRs.getString("item_name"),
+                                        itemRs.getDouble("item_price")));
+                            }
+                        }
+                    }
+                    rootMenu.add(category);
+                }
+            }
+
+            adminService.setMenu(rootMenu);
+            System.out.println("Menu loaded from database.");
+        } catch (SQLException e) {
+            System.out.println("Error loading menu: " + e.getMessage());
+        }
     }
 
     private void initializeDiscounts() {
@@ -121,19 +160,20 @@ public class FoodOrderingFacade {
                 case "2":
                     try {
                         runCustomerPanel();
-                    }catch (RestaurantClosedException e){
+                    } catch (RestaurantClosedException e) {
                         System.err.println(e.getMessage());
                     }
                     break;
                 case "3":
                     try {
                         runDeliveryAgentPanel();
-                    }catch (RestaurantClosedException e){
+                    } catch (RestaurantClosedException e) {
                         System.err.println(e.getMessage());
                     }
                     break;
                 case "4":
                     System.out.println("\nThank you for using the Food Ordering System. Goodbye!");
+                    DBConnection.closeConnection();
                     return;
                 default:
                     System.out.println("Invalid choice. Please try again.");
@@ -158,7 +198,7 @@ public class FoodOrderingFacade {
         }
     }
 
-    private void runDeliveryAgentPanel() throws RestaurantClosedException{
+    private void runDeliveryAgentPanel() throws RestaurantClosedException {
         if (!adminPanel.isAdminLoggedIn()) {
             throw new RestaurantClosedException("Admin must log in first before delivery agents can use the system.");
         }

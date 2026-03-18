@@ -21,6 +21,12 @@ public class MenuItem implements MenuComponent {
         this.itemPrice = itemPrice;
     }
 
+    public MenuItem(int itemId, String itemName, double itemPrice) {
+        this.itemId = itemId;
+        this.itemName = itemName;
+        this.itemPrice = itemPrice;
+    }
+
     @Override
     public Integer getId() {
         return itemId;
@@ -76,5 +82,4 @@ public class MenuItem implements MenuComponent {
     public String toString() {
         return String.format("%-5s %-30s %-10s\n", getId(), getName(), getPrice());
     }
-    // eqals and hash
 }

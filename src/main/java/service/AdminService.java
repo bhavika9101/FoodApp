@@ -1,5 +1,9 @@
 package service;
 
+import dao.AdminDAO;
+import dao.MenuCategoryDAO;
+import dao.MenuItemDAO;
+import model.enums.DeliveryAgentStatus;
 import model.enums.OrderStatus;
 import model.order.MenuCategory;
 import model.order.MenuComponent;
@@ -9,8 +13,9 @@ import model.payment.Discount;
 import model.user.Admin;
 import model.user.DeliveryAgent;
 import model.user.User;
-import model.enums.DeliveryAgentStatus;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 public class AdminService extends BaseService {
@@ -18,12 +23,13 @@ public class AdminService extends BaseService {
     private final OrderService orderService;
     private final DeliveryAgentService deliveryAgentService;
     private final Queue<Integer> deliveryQueue = new LinkedList<>();
-    private Double revenue;
-//    map user id and user object
+    private final AdminDAO adminDAO = new AdminDAO();
+    private final MenuCategoryDAO menuCategoryDAO = new MenuCategoryDAO();
+    private final MenuItemDAO menuItemDAO = new MenuItemDAO();
+
     public AdminService(OrderService orderService, DeliveryAgentService deliveryAgentService) {
         this.orderService = orderService;
         this.deliveryAgentService = deliveryAgentService;
-        revenue = 0.0;
     }
 
     @Override
@@ -42,31 +48,41 @@ public class AdminService extends BaseService {
     public MenuComponent getMenu() {
         return menu;
     }
+
     public void addMenuItemToCategory(Integer categoryId, MenuItem item) {
-        if (menu == null) {
-            System.out.println("Menu not initialized.");
-            return;
-        }
-        MenuComponent category = findCategory(menu, categoryId);
-        if (category != null) {
-            category.add(item);
-            System.out.println("'" + item.getName() + "' added to '" + category.getName() + "' successfully.");
-        } else {
-            System.out.println("Category '" + categoryId + "' not found.");
+        try {
+            int itemId = menuItemDAO.insert(item.getName(), item.getPrice(), categoryId);
+            MenuItem dbItem = new MenuItem(itemId, item.getName(), item.getPrice());
+
+            if (menu != null) {
+                MenuComponent category = findCategory(menu, categoryId);
+                if (category != null) {
+                    category.add(dbItem);
+                    System.out
+                            .println("'" + dbItem.getName() + "' added to '" + category.getName() + "' successfully.");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error adding menu item: " + e.getMessage());
         }
     }
 
     public void addCategory(String categoryName) {
-        if (menu == null) {
-            System.out.println("Menu not initialized.");
-            return;
+        try {
+            if (menuCategoryDAO.existsByName(categoryName)) {
+                System.out.println("Category '" + categoryName + "' already exists.");
+                return;
+            }
+            // Integer parentId = (menu != null) ? menu.getId() : null;
+            int categoryId = menuCategoryDAO.insert(categoryName, null);
+            MenuComponent newCategory = new MenuCategory(categoryId, categoryName);
+            if (menu != null) {
+                menu.add(newCategory);
+            }
+            System.out.println("Category '" + categoryName + "' added to menu. ID: " + categoryId);
+        } catch (SQLException e) {
+            System.out.println("Error adding category: " + e.getMessage());
         }
-        MenuComponent newCategory = new MenuCategory(categoryName);
-        if(!menu.add(newCategory)){
-            System.out.println("Category '" + categoryName + "' already exists.");
-            return;
-        }
-        System.out.println("Category '" + categoryName + "' added to menu.");
     }
 
     private MenuComponent findCategory(MenuComponent component, Integer categoryId) {
@@ -82,6 +98,7 @@ public class AdminService extends BaseService {
         }
         return null;
     }
+
     public void addDiscount(Double threshold, Double rate) {
         Boolean success = DiscountService.add(new Discount(threshold, rate));
         if (success) {
@@ -115,12 +132,13 @@ public class AdminService extends BaseService {
             return;
         }
         if (order.getStatus() != OrderStatus.PLACED) {
-            System.out.println("Order #" + orderId + " is not in PLACED status. Current: " + order.getStatus().getDisplayName());
+            System.out.println(
+                    "Order #" + orderId + " is not in PLACED status. Current: " + order.getStatus().getDisplayName());
             return;
         }
         orderService.updateOrderStatus(orderId, OrderStatus.APPROVED);
         System.out.println("Order #" + orderId + " approved successfully.");
-        revenue += order.getFinalAmount();
+
         DeliveryAgent availableAgent = deliveryAgentService.findAvailableAgent();
         if (availableAgent != null) {
             assignOrderToAgent(order, availableAgent);
@@ -155,8 +173,10 @@ public class AdminService extends BaseService {
     }
 
     private void assignOrderToAgent(Order order, DeliveryAgent agent) {
+        orderService.updateAssignedAgent(order.getOrderId(), agent.getUserId());
         order.setAssignedAgentId(agent.getUserId());
         order.setAssignedAgentName(agent.getUsername());
+        deliveryAgentService.updateAgentStatus(agent.getUserId(), DeliveryAgentStatus.ON_DELIVERY);
         agent.setStatus(DeliveryAgentStatus.ON_DELIVERY);
         agent.setCurrentOrderId(order.getOrderId());
 
@@ -165,24 +185,40 @@ public class AdminService extends BaseService {
     }
 
     public void processDeliveryQueue() {
-        if (deliveryQueue.isEmpty()) {
-            return;
+        while (!deliveryQueue.isEmpty()) {
+            DeliveryAgent availableAgent = deliveryAgentService.findAvailableAgent();
+            if (availableAgent == null) {
+                return;
+            }
+            Integer nextOrderId = deliveryQueue.poll();
+            Order nextOrder = orderService.getOrderById(nextOrderId);
+            if (nextOrder != null) {
+                assignOrderToAgent(nextOrder, availableAgent);
+                System.out.println("\n[AUTO-ASSIGNED] Queued order #" + nextOrderId
+                        + " assigned to agent: " + availableAgent.getUsername());
+            }
         }
-        DeliveryAgent availableAgent = deliveryAgentService.findAvailableAgent();
-        if (availableAgent == null) {
-            return;
-        }
-        Integer nextOrderId = deliveryQueue.poll();
-        Order nextOrder = orderService.getOrderById(nextOrderId);
-        if (nextOrder != null) {
-            assignOrderToAgent(nextOrder, availableAgent);
-            System.out.println("\n[AUTO-ASSIGNED] Queued order #" + nextOrderId
+        List<Order> unassigned = orderService.getUnassignedApprovedOrders();
+        for (Order order : unassigned) {
+            DeliveryAgent availableAgent = deliveryAgentService.findAvailableAgent();
+            if (availableAgent == null) {
+                return;
+            }
+            assignOrderToAgent(order, availableAgent);
+            System.out.println("\n[AUTO-ASSIGNED] Order #" + order.getOrderId()
                     + " assigned to agent: " + availableAgent.getUsername());
         }
     }
 
     public Queue<Integer> getDeliveryQueue() {
-        return deliveryQueue;
+        Queue<Integer> combined = new LinkedList<>(deliveryQueue);
+        List<Order> unassigned = orderService.getUnassignedApprovedOrders();
+        for (Order order : unassigned) {
+            if (!combined.contains(order.getOrderId())) {
+                combined.add(order.getOrderId());
+            }
+        }
+        return combined;
     }
 
     public void collectAllMenuItems(MenuComponent component, List<MenuItem> itemList) {
@@ -194,16 +230,22 @@ public class AdminService extends BaseService {
             }
         }
     }
-    public Double getRevenue(){
-        return revenue;
+
+    public Double getRevenue() {
+        try {
+            return adminDAO.getRevenue();
+        } catch (SQLException e) {
+            System.out.println("Error getting revenue: " + e.getMessage());
+            return 0.0;
+        }
     }
 
-    public List<MenuComponent> getCategoryList(MenuComponent menu){
+    public List<MenuComponent> getCategoryList(MenuComponent menu) {
         List<MenuComponent> categories = new ArrayList<>();
-        for(MenuComponent menuComponent: menu.getComponentSet()){
-            if(menuComponent instanceof MenuCategory){
+        for (MenuComponent menuComponent : menu.getComponentSet()) {
+            if (menuComponent instanceof MenuCategory) {
                 categories.add(menuComponent);
-                if(menuComponent.getComponentSet() != null){
+                if (menuComponent.getComponentSet() != null) {
                     categories.addAll(getCategoryList(menuComponent));
                 }
             }

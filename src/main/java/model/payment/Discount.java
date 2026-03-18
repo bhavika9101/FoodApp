@@ -1,11 +1,5 @@
 package model.payment;
 
-import model.user.Admin;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BinaryOperator;
-
 public class Discount {
     private final Double priceThreshold;
     private final Double discountRate;
@@ -20,6 +14,14 @@ public class Discount {
     }
 
     public Double getDiscountRate() {
+        return discountRate;
+    }
+
+    public Double getThreshold() {
+        return priceThreshold;
+    }
+
+    public Double getRate() {
         return discountRate;
     }
 }

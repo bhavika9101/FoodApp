@@ -1,98 +1,102 @@
 package service;
 
-import model.order.Cart;
+import dao.CartDAO;
+import dao.CartItemDAO;
 import model.order.MenuItem;
-import model.payment.Discount;
 
-import java.util.HashMap;
+import java.sql.SQLException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CartService {
-    private final Map<MenuItem, Integer> cartItemMap;
+    private final CartDAO cartDAO = new CartDAO();
+    private final CartItemDAO cartItemDAO = new CartItemDAO();
 
-    public CartService() {
-        cartItemMap = new HashMap<>();
-    }
-
-    public void addToCart(MenuItem menuItem, Integer quantity) {
-        cartItemMap.put(menuItem, cartItemMap.getOrDefault(menuItem, 0) + quantity);
-    }
-
-    public void removeFromCart(MenuItem menuItem) {
-        cartItemMap.remove(menuItem);
-    }
-
-    public void reduceQuantity(MenuItem menuItem, Integer quantity) {
-        Integer currentQty = cartItemMap.get(menuItem);
-        if (currentQty == null) {
-            return;
-        }
-        Integer newQty = currentQty - quantity;
-        if (newQty <= 0) {
-            cartItemMap.remove(menuItem);
-        } else {
-            cartItemMap.put(menuItem, newQty);
+    public void addToCart(int customerId, MenuItem item, int quantity) {
+        try {
+            int cartId = cartDAO.getOrCreateCart(customerId);
+            cartItemDAO.insert(cartId, item.getId(), quantity);
+            System.out.println("Added " + quantity + "x '" + item.getName() + "' to cart.");
+        } catch (SQLException e) {
+            System.out.println("Error adding to cart: " + e.getMessage());
         }
     }
 
-    public void clearCart() {
-        cartItemMap.clear();
-    }
-
-    public Double calculateTotalValue() {
-        Double total = 0.0;
-        for (Map.Entry<MenuItem, Integer> cartItem : cartItemMap.entrySet()) {
-            Double unitPrice = cartItem.getKey().getPrice();
-            Integer quantity = cartItem.getValue();
-            total += unitPrice * quantity;
+    public void removeFromCart(int customerId, int itemId) {
+        try {
+            int cartId = cartDAO.getCartIdByCustomerId(customerId);
+            if (cartId == -1) {
+                System.out.println("Cart is empty.");
+                return;
+            }
+            cartItemDAO.delete(cartId, itemId);
+            System.out.println("Item removed from cart.");
+        } catch (SQLException e) {
+            System.out.println("Error removing from cart: " + e.getMessage());
         }
-        return total;
     }
 
-    public Double findDiscount(Double cartValue) {
-        Discount discount = DiscountService.getDiscount(cartValue);
-        if (discount == null || discount.getDiscountRate() == null) {
+    public void updateQuantity(int customerId, int itemId, int newQuantity) {
+        try {
+            int cartId = cartDAO.getCartIdByCustomerId(customerId);
+            if (cartId == -1) {
+                System.out.println("Cart is empty.");
+                return;
+            }
+            cartItemDAO.updateQuantity(cartId, itemId, newQuantity);
+            System.out.println("Quantity updated.");
+        } catch (SQLException e) {
+            System.out.println("Error updating quantity: " + e.getMessage());
+        }
+    }
+
+    public Map<MenuItem, Integer> getCartItems(int customerId) {
+        try {
+            int cartId = cartDAO.getCartIdByCustomerId(customerId);
+            if (cartId == -1) {
+                return new LinkedHashMap<>();
+            }
+            return cartItemDAO.getCartItemsByCartId(cartId);
+        } catch (SQLException e) {
+            System.out.println("Error fetching cart items: " + e.getMessage());
+            return new LinkedHashMap<>();
+        }
+    }
+
+    public double calculateTotalValue(int customerId) {
+        try {
+            int cartId = cartDAO.getCartIdByCustomerId(customerId);
+            if (cartId == -1) {
+                return 0.0;
+            }
+            return cartItemDAO.calculateCartValue(cartId);
+        } catch (SQLException e) {
+            System.out.println("Error calculating cart value: " + e.getMessage());
             return 0.0;
         }
-        return cartValue * discount.getDiscountRate();
     }
 
-    public Double findFinalAmount(Double cartValue, Double discountAmount) {
-        return cartValue - discountAmount;
-    }
-
-    public Cart finalizeCart(Integer customerId) {
-        return new Cart(new HashMap<>(cartItemMap), customerId);
-    }
-
-    public Map<MenuItem, Integer> getCartItemMap() {
-        return cartItemMap;
-    }
-
-    public Boolean isEmpty() {
-        return cartItemMap.isEmpty();
-    }
-
-    public void printCart() {
-        if (cartItemMap.isEmpty()) {
-            System.out.println("Your cart is empty.");
-            return;
+    public void clearCart(int customerId) {
+        try {
+            int cartId = cartDAO.getCartIdByCustomerId(customerId);
+            if (cartId != -1) {
+                cartItemDAO.deleteByCartId(cartId);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error clearing cart: " + e.getMessage());
         }
-        System.out.println("+----+----------------------+-------+----------+----------+");
-        System.out.println("| #  | Item                 | Qty   | Price    | Total    |");
-        System.out.println("+----+----------------------+-------+----------+----------+");
-        Integer index = 1;
-        Double grandTotal = 0.0;
-        for (Map.Entry<MenuItem, Integer> entry : cartItemMap.entrySet()) {
-            MenuItem item = entry.getKey();
-            Integer qty = entry.getValue();
-            Double total = item.getPrice() * qty;
-            grandTotal += total;
-            System.out.printf("| %-2d | %-20s | %-5d | %8.2f | %8.2f |%n",
-                    index++, item.getName(), qty, item.getPrice(), total);
+    }
+
+    public boolean isCartEmpty(int customerId) {
+        try {
+            int cartId = cartDAO.getCartIdByCustomerId(customerId);
+            if (cartId == -1) {
+                return true;
+            }
+            return cartItemDAO.isEmpty(cartId);
+        } catch (SQLException e) {
+            System.out.println("Error checking cart: " + e.getMessage());
+            return true;
         }
-        System.out.println("+----+----------------------+-------+----------+----------+");
-        System.out.printf("| %-42s | %8.2f |%n", "Cart Total", grandTotal);
-        System.out.println("+----+----------------------+-------+----------+----------+");
     }
 }

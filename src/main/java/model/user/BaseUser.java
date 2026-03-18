@@ -6,19 +6,29 @@ import java.util.Objects;
 
 public abstract class BaseUser implements User {
     private static final IdGenerator idGenerator = new IdGenerator();
-    private final Integer userId;
+    private Integer userId;
     private String username;
     private String password;
     private String phoneNumber;
-    public BaseUser(){
+
+    public BaseUser() {
         this.userId = idGenerator.generateId();
     }
-    public BaseUser(String customerName, String password, String phoneNumber){
+
+    public BaseUser(String customerName, String password, String phoneNumber) {
         this();
         this.username = customerName;
         this.password = password;
         this.phoneNumber = phoneNumber;
     }
+
+    public BaseUser(int userId, String username, String password, String phoneNumber) {
+        this.userId = userId;
+        this.username = username;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+    }
+
     @Override
     public String getUsername() {
         return username;
@@ -53,9 +63,9 @@ public abstract class BaseUser implements User {
     //
     @Override
     public boolean equals(Object obj) {
-        if(this == obj)
+        if (this == obj)
             return true;
-        if(obj == null || getClass() != obj.getClass())
+        if (obj == null || getClass() != obj.getClass())
             return false;
         User user = (User) obj;
         return user.getUserId().equals(this.getUserId());

@@ -10,13 +10,21 @@ public class MenuCategory implements MenuComponent {
     private final Integer categoryId;
     private String categoryName;
     private final Set<MenuComponent> componentSet = new HashSet<>();
-    public MenuCategory(){
+
+    public MenuCategory() {
         this.categoryId = idGenerator.generateId();
     }
+
     public MenuCategory(String categoryName) {
         this();
         this.categoryName = categoryName;
     }
+
+    public MenuCategory(int categoryId, String categoryName) {
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
+    }
+
     @Override
     public Integer getId() {
         return categoryId;
@@ -52,14 +60,16 @@ public class MenuCategory implements MenuComponent {
         componentSet.forEach(MenuComponent::print);
     }
 
-    public boolean add(MenuComponent menuComponent){
-       return componentSet.add(menuComponent);
+    public boolean add(MenuComponent menuComponent) {
+        return componentSet.add(menuComponent);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj)
+            return true;
+        if (obj == null || getClass() != obj.getClass())
+            return false;
 
         MenuCategory that = (MenuCategory) obj;
         return Objects.equals(this.categoryName, that.categoryName);

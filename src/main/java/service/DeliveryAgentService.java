@@ -1,16 +1,16 @@
 package service;
 
+import dao.DeliveryAgentDAO;
 import model.enums.DeliveryAgentStatus;
-import model.order.Order;
 import model.user.DeliveryAgent;
 import model.user.User;
 
-import java.util.HashMap;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Map;
 
 public class DeliveryAgentService extends BaseService {
-    private static Integer deliveryAgentCount = 0;
-    private static final Integer DELIVERY_AGENT_COUNT_LIMIT = 2;
+    private final DeliveryAgentDAO deliveryAgentDAO = new DeliveryAgentDAO();
 
     @Override
     public User signUp(String type, String username, String password, String phone) {
@@ -18,131 +18,135 @@ public class DeliveryAgentService extends BaseService {
             System.out.println("Invalid user type. Sign Up unsuccessful.");
             return null;
         }
-        if (deliveryAgentCount.equals(DELIVERY_AGENT_COUNT_LIMIT)) {
-            System.out.println("Can't create more than two Delivery agents.");
-            return null;
-        }
-        User user = super.signUp(type, username, password, phone);
-        if (user == null)
-            return null;
-        deliveryAgentCount++;
-        return user;
-    }
-
-    public DeliveryAgent getAgentByUsername(String username) {
-        User user = getUserByUsername(username);
-        if (user instanceof DeliveryAgent) {
-            return (DeliveryAgent) user;
-        }
-        return null;
+        return super.signUp(type, username, password, phone);
     }
 
     public DeliveryAgent findAvailableAgent() {
-        for (User user : getLoggedInUsers()) {
-            if (user instanceof DeliveryAgent) {
-                DeliveryAgent agent = (DeliveryAgent) user;
-                if (agent.isAvailable()) {
-                    return agent;
-                }
+        try (ResultSet rs = deliveryAgentDAO.getAgentsByStatus("AVAILABLE")) {
+            if (rs.next()) {
+                return new DeliveryAgent(
+                        rs.getInt("user_id"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getString("phone_number"),
+                        DeliveryAgentStatus.valueOf(rs.getString("agent_status")),
+                        rs.getDouble("gross_earning"),
+                        rs.getDouble("base_salary"),
+                        rs.getDouble("commission_rate"));
             }
+        } catch (SQLException e) {
+            System.out.println("Error finding available agent: " + e.getMessage());
         }
         return null;
     }
 
-    public void markOrderAsDelivered(DeliveryAgent agent, OrderService orderService, AdminService adminService) {
-        Integer currentOrderId = agent.getCurrentOrderId();
-        if (currentOrderId == null) {
-            System.out.println("No order assigned to you currently.");
-            return;
-        }
-        Order order = orderService.getOrderById(currentOrderId);
-        if (order == null) {
-            System.out.println("Order not found.");
-            return;
-        }
-        if (order.getStatus() != model.enums.OrderStatus.OUT_FOR_DELIVERY) {
-            System.out.println("You must start the delivery first before marking it as delivered.");
-            System.out.println("Current status: " + order.getStatus().getDisplayName());
-            return;
-        }
-
-        agent.setStatus(DeliveryAgentStatus.AVAILABLE);
-        agent.setCurrentOrderId(null);
-        orderService.updateOrderStatus(currentOrderId, model.enums.OrderStatus.DELIVERED);
-        System.out.println("Order #" + currentOrderId + " marked as DELIVERED. You are now available for new deliveries.");
-        payDeliveryAgent(agent, order.getFinalAmount());
-
-        if (adminService != null) {
-            adminService.processDeliveryQueue();
+    public void updateAgentStatus(int agentId, DeliveryAgentStatus status) {
+        try {
+            deliveryAgentDAO.updateStatus(agentId, status.name());
+        } catch (SQLException e) {
+            System.out.println("Error updating agent status: " + e.getMessage());
         }
     }
 
-    public void viewAssignedOrder(DeliveryAgent agent, OrderService orderService) {
-        Integer currentOrderId = agent.getCurrentOrderId();
-        if (currentOrderId == null) {
-            System.out.println("No order assigned to you currently.");
-            return;
-        }
-        Order order = orderService.getOrderById(currentOrderId);
-        if (order == null) {
-            System.out.println("Order not found.");
-            return;
-        }
-        System.out.println("\n--- Assigned Order Details ---");
-        System.out.println("  Order ID     : #" + order.getOrderId());
-        System.out.println("  Customer     : " + order.getCustomerName());
-        System.out.println("  Address      : " + order.getCustomerAddress());
-        System.out.println("  Order Status : " + order.getStatus().getDisplayName());
-        System.out.println("  Final Amount : Rs." + String.format("%.2f", order.getFinalAmount()));
-        System.out.println("-----------------------------");
-    }
-
-    public Boolean isAnyAgentLoggedIn() {
-        return isAnyUserLoggedIn();
-    }
-
-    public void startDelivery(DeliveryAgent agent, OrderService orderService) {
-        Integer currentOrderId = agent.getCurrentOrderId();
-        if (currentOrderId == null) {
-            System.out.println("No order assigned to you.");
-            return;
-        }
-        Order order = orderService.getOrderById(currentOrderId);
-        if (order != null && order.getStatus() == model.enums.OrderStatus.READY_FOR_DELIVERY) {
-            orderService.updateOrderStatus(currentOrderId, model.enums.OrderStatus.OUT_FOR_DELIVERY);
-            System.out.println("You have picked up order #" + currentOrderId + ". Now delivering...");
-        } else {
-            System.out.println("Order is not ready for delivery.");
+    public void payDeliveryAgent(int agentId, double amount) {
+        try {
+            deliveryAgentDAO.updateGrossEarning(agentId, amount);
+            System.out.println("Payment of Rs." + amount + " credited to agent #" + agentId);
+        } catch (SQLException e) {
+            System.out.println("Error paying agent: " + e.getMessage());
         }
     }
 
-    public void payDeliveryAgent(DeliveryAgent agent, Double billAmount){
-        agent.incrementGrossEarning((billAmount*agent.getCommissionRate())/100);
-    }
-
-    public Double getGrossEarning(DeliveryAgent agent){
-        return agent.getGrossEarning();
-    }
-
-    public void setDeliveryAgentBaseSalary(DeliveryAgent agent, Double baseSalary){
-        if(baseSalary<=0){
-            System.out.println("Base salary has to be above 0.");
-            return;
+    public double getDeliveryAgentGrossEarning(int agentId) {
+        try {
+            return deliveryAgentDAO.getGrossEarning(agentId);
+        } catch (SQLException e) {
+            System.out.println("Error getting earnings: " + e.getMessage());
+            return 0.0;
         }
-        agent.setBaseSalary(baseSalary);
     }
 
-    public void setDeliveryAgentCommissionRate(DeliveryAgent agent, Double commissionRate){
-        if(commissionRate<=0){
-            System.out.println("Commission rate has to be above 0.");
-            return;
+    public void setDeliveryAgentBaseSalary(int agentId, double salary) {
+        try {
+            deliveryAgentDAO.updateBaseSalary(agentId, salary);
+            System.out.println("Base salary set to Rs." + salary + " for agent #" + agentId);
+        } catch (SQLException e) {
+            System.out.println("Error setting salary: " + e.getMessage());
         }
-        agent.setCommissionRate(commissionRate);
     }
-    public Map<String, Double> getDeliveryAgentFinanceInfo(DeliveryAgent agent){
-        Map<String, Double> financeInfo = new HashMap<>();
-        financeInfo.put("base_salary", agent.getBaseSalary());
-        financeInfo.put("commission_rate", agent.getCommissionRate());
-        return financeInfo;
+
+    public void setDeliveryAgentCommissionRate(int agentId, double rate) {
+        try {
+            deliveryAgentDAO.updateCommissionRate(agentId, rate);
+            System.out.println("Commission rate set to " + (rate * 100) + "% for agent #" + agentId);
+        } catch (SQLException e) {
+            System.out.println("Error setting commission rate: " + e.getMessage());
+        }
+    }
+
+    public Map<String, Double> getDeliveryAgentFinancials(int agentId) {
+        try {
+            return deliveryAgentDAO.getBaseSalaryAndCommission(agentId);
+        } catch (SQLException e) {
+            System.out.println("Error getting financials: " + e.getMessage());
+            return Map.of();
+        }
+    }
+
+    public int getAgentCount() {
+        try {
+            return deliveryAgentDAO.getAgentCount();
+        } catch (SQLException e) {
+            System.out.println("Error getting agent count: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    public DeliveryAgentStatus getAgentStatus(int agentId) {
+        try {
+            String status = deliveryAgentDAO.getStatus(agentId);
+            if (status != null) {
+                return DeliveryAgentStatus.valueOf(status);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error getting agent status: " + e.getMessage());
+        }
+        return DeliveryAgentStatus.UNAVAILABLE;
+    }
+
+    public Integer getAgentCurrentOrderId(int agentId) {
+        try {
+            return deliveryAgentDAO.getCurrentOrderId(agentId);
+        } catch (SQLException e) {
+            System.out.println("Error getting agent's current order: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public DeliveryAgent getAgentByUsername(String username) {
+        try (ResultSet userRs = new dao.UserDAO().getUserByUsername(username)) {
+            if (userRs.next()) {
+                int userId = userRs.getInt("user_id");
+                String userType = userRs.getString("user_type");
+                if (!"DELIVERY_AGENT".equals(userType)) {
+                    return null;
+                }
+                try (ResultSet agentRs = deliveryAgentDAO.getAgentById(userId)) {
+                    if (agentRs.next()) {
+                        return new DeliveryAgent(userId,
+                                userRs.getString("username"),
+                                userRs.getString("password"),
+                                userRs.getString("phone_number"),
+                                DeliveryAgentStatus.valueOf(agentRs.getString("agent_status")),
+                                agentRs.getDouble("gross_earning"),
+                                agentRs.getDouble("base_salary"),
+                                agentRs.getDouble("commission_rate"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error finding agent: " + e.getMessage());
+        }
+        return null;
     }
 }

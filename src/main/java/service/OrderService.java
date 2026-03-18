@@ -1,134 +1,161 @@
 package service;
 
+import dao.OrderDAO;
+import dao.OrderItemDAO;
 import model.enums.OrderStatus;
+import model.enums.PaymentMode;
 import model.order.MenuItem;
 import model.order.Order;
-import observer.EventManager;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class OrderService {
-    private final List<Order> allOrders = new ArrayList<>();
-    private final EventManager eventManager;
+    private final OrderDAO orderDAO = new OrderDAO();
+    private final OrderItemDAO orderItemDAO = new OrderItemDAO();
 
-    public OrderService(EventManager eventManager) {
-        this.eventManager = eventManager;
+    public Order addOrder(int customerId, String customerName, String customerAddress,
+            Map<MenuItem, Integer> items, double subtotal,
+            double discountAmount, double finalAmount, String paymentMode) {
+        try {
+            int orderId = orderDAO.insertOrder(customerId, customerAddress, subtotal,
+                    discountAmount, finalAmount, paymentMode, "PLACED");
+
+            for (Map.Entry<MenuItem, Integer> entry : items.entrySet()) {
+                MenuItem item = entry.getKey();
+                int qty = entry.getValue();
+                orderItemDAO.insert(orderId, item.getId(), qty, item.getPrice());
+            }
+
+            Order order = new Order(orderId, customerId, customerName, customerAddress,
+                    subtotal, discountAmount, finalAmount,
+                    PaymentMode.valueOf(paymentMode), OrderStatus.PLACED, null, null);
+            order.setItems(items);
+
+            System.out.println("Order #" + orderId + " placed successfully.");
+            return order;
+        } catch (SQLException e) {
+            System.out.println("Error creating order: " + e.getMessage());
+            return null;
+        }
     }
 
-    public void addOrder(Order order) {
-        allOrders.add(order);
-        eventManager.notifyObservers("ORDER_PLACED", order);
+    public Order getOrderById(int orderId) {
+        try (ResultSet rs = orderDAO.getOrderById(orderId)) {
+            if (rs.next()) {
+                return buildOrderFromResultSet(rs);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error fetching order: " + e.getMessage());
+        }
+        return null;
     }
 
-    public Order getOrderById(Integer orderId) {
-        return allOrders.stream()
-                .filter(o -> o.getOrderId().equals(orderId))
-                .findFirst()
-                .orElse(null);
-    }
-
-    public List<Order> getOrdersByCustomerId(Integer customerId) {
-        return allOrders.stream()
-                .filter(o -> o.getCustomerId().equals(customerId))
-                .collect(Collectors.toList());
+    public List<Order> getOrdersByCustomerId(int customerId) {
+        List<Order> orders = new ArrayList<>();
+        try (ResultSet rs = orderDAO.getOrdersByCustomerId(customerId)) {
+            while (rs.next()) {
+                orders.add(buildOrderFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error fetching customer orders: " + e.getMessage());
+        }
+        return orders;
     }
 
     public List<Order> getPendingOrders() {
-        return allOrders.stream()
-                .filter(o -> o.getStatus() == OrderStatus.PLACED)
-                .collect(Collectors.toList());
+        return getOrdersByStatus("PLACED");
     }
 
     public List<Order> getApprovedOrders() {
-        return allOrders.stream()
-                .filter(o -> o.getStatus() == OrderStatus.APPROVED)
-                .collect(Collectors.toList());
+        return getOrdersByStatus("APPROVED");
     }
 
-    public void updateOrderStatus(Integer orderId, OrderStatus newStatus) {
-        Order order = getOrderById(orderId);
-        if (order == null) {
-            System.out.println("Order #" + orderId + " not found.");
-            return;
+    public List<Order> getOrdersByStatus(String status) {
+        List<Order> orders = new ArrayList<>();
+        try (ResultSet rs = orderDAO.getOrdersByStatus(status)) {
+            while (rs.next()) {
+                orders.add(buildOrderFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error fetching orders by status: " + e.getMessage());
         }
-        order.setStatus(newStatus);
+        return orders;
+    }
 
-        switch (newStatus) {
-            case APPROVED:
-                eventManager.notifyObservers("ORDER_APPROVED", order);
-                break;
-            case READY_FOR_DELIVERY:
-                eventManager.notifyObservers("ORDER_READY_FOR_DELIVERY", order);
-                break;
-            case OUT_FOR_DELIVERY:
-                eventManager.notifyObservers("ORDER_OUT_FOR_DELIVERY", order);
-                break;
-            case DELIVERED:
-                eventManager.notifyObservers("ORDER_DELIVERED", order);
-                break;
-            default:
-                break;
+    public void updateOrderStatus(int orderId, OrderStatus status) {
+        try {
+            orderDAO.updateOrderStatus(orderId, status.name());
+        } catch (SQLException e) {
+            System.out.println("Error updating order status: " + e.getMessage());
+        }
+    }
+
+    public void updateAssignedAgent(int orderId, int agentId) {
+        try {
+            orderDAO.updateAssignedAgent(orderId, agentId);
+        } catch (SQLException e) {
+            System.out.println("Error updating assigned agent: " + e.getMessage());
         }
     }
 
     public List<Order> getAllOrders() {
-        return allOrders;
+        List<Order> orders = new ArrayList<>();
+        try (ResultSet rs = orderDAO.getAllOrders()) {
+            while (rs.next()) {
+                orders.add(buildOrderFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error fetching all orders: " + e.getMessage());
+        }
+        return orders;
     }
 
-    public String getOrderInfo(Integer orderId){
-        Order order = getOrderById(orderId);
-        return String.format("%-5s %-20s %-50s %-10s %-5s", order.getOrderId(), order.getCustomerName(), order.getCustomerAddress(), order.getFinalAmount(),order.getPaymentMode());
+    public Map<MenuItem, Integer> getOrderItems(int orderId) {
+        try {
+            return orderItemDAO.getAllByOrderId(orderId);
+        } catch (SQLException e) {
+            System.out.println("Error fetching order items: " + e.getMessage());
+            return Map.of();
+        }
     }
 
-    public String getOrderDetails(Integer orderId){
-        Order o = getOrderById(orderId);
-        if(o == null){
-            return null;
+    private Order buildOrderFromResultSet(ResultSet rs) throws SQLException {
+        Integer assignedAgentId = rs.getInt("assigned_agent_id");
+        if (rs.wasNull()) {
+            assignedAgentId = null;
         }
-        String preInfo =  "Order ID: "+ o.getOrderId() +
-                "\nCustomer Name: "+ o.getCustomerName() +
-                "\nCustomer address: "+ o.getCustomerAddress();
-        StringBuilder information = new StringBuilder(preInfo);
-        information.append("\n");
-        information.append("Item:\n");
-        for (Map.Entry<MenuItem, Integer> itemMap: o.getItems().entrySet()){
-            information.append(itemMap.getKey().toString())
-                    .append("                  ")
-                    .append(itemMap.getValue())
-                    .append("\n");
+        String agentName = null;
+        if (assignedAgentId != null) {
+            agentName = orderDAO.getAssignedAgentName(rs.getInt("order_id"));
         }
-        information
-                .append("\nTotal: ")
-                .append(o.getSubtotal())
-                .append("\nDiscount: ")
-                .append(o.getDiscountAmount())
-                .append("\nPayable amount: ")
-                .append(o.getFinalAmount())
-                .append("\nPayment mode: ")
-                .append(o.getPaymentMode())
-                .append("\nOrder status: ")
-                .append(o.getStatus())
-                .append("\nDelivery Agent: ");
-        String name = o.getAssignedAgentName();
-        information
-                .append(name==null?"Not assigned yet.":name);
-        return information.toString();
 
+        return new Order(
+                rs.getInt("order_id"),
+                rs.getInt("customer_id"),
+                rs.getString("customer_name"),
+                rs.getString("customer_address"),
+                rs.getDouble("subtotal"),
+                rs.getDouble("discount_amount"),
+                rs.getDouble("final_amount"),
+                PaymentMode.valueOf(rs.getString("payment_mode")),
+                OrderStatus.valueOf(rs.getString("status")),
+                assignedAgentId,
+                agentName);
+    }
 
-//        private final Integer orderId;
-//        private final Integer customerId;
-//        private final String customerName;
-//        private final String customerAddress;
-//        private final Map<MenuItem, Integer> items;
-//        private final Double subtotal;
-//        private final Double discountAmount;
-//        private final Double finalAmount;
-//        private PaymentMode paymentMode;
-//        private OrderStatus status;
-//        private Integer assignedAgentId;
-//        private String assignedAgentName;
+    public List<Order> getUnassignedApprovedOrders() {
+        List<Order> orders = new ArrayList<>();
+        try (ResultSet rs = orderDAO.getUnassignedApprovedOrders()) {
+            while (rs.next()) {
+                orders.add(buildOrderFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error fetching unassigned orders: " + e.getMessage());
+        }
+        return orders;
     }
 }

@@ -1,51 +1,55 @@
 package service;
 
+import dao.DiscountDAO;
 import model.payment.Discount;
 
-import java.util.TreeMap;
-import java.util.Map;
+import java.sql.SQLException;
+import java.util.List;
 
 public class DiscountService {
-    private static final Map<Double, Double> discountMap = new TreeMap<>();
+    private static final DiscountDAO discountDAO = new DiscountDAO();
 
-    public static boolean add(Discount discount) {
-        return discountMap.putIfAbsent(discount.getPriceThreshold(),
-                discount.getDiscountRate()) == null;
-    }
-
-    public static boolean edit(Discount discount) {
-        return discountMap.replace(discount.getPriceThreshold(),
-                discount.getDiscountRate()) != null;
-    }
-
-    public static boolean remove(Double priceThreshold) {
-        return discountMap.remove(priceThreshold) != null;
-    }
-
-    public static Discount getDiscount(Double totalAmount) {
-        Double discountPrice = null;
-        for (Map.Entry<Double, Double> discount : discountMap.entrySet()) {
-            if (totalAmount < discount.getKey())
-                break;
-            discountPrice = discount.getKey();
+    public static Boolean add(Discount discount) {
+        try {
+            return discountDAO.insert(discount.getThreshold(), discount.getRate());
+        } catch (SQLException e) {
+            System.out.println("Error adding discount: " + e.getMessage());
+            return false;
         }
-        if (discountPrice == null) {
+    }
+
+    public static Boolean remove(Double threshold) {
+        try {
+            return discountDAO.delete(threshold);
+        } catch (SQLException e) {
+            System.out.println("Error removing discount: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static Discount getDiscount(Double amount) {
+        try {
+            return discountDAO.findByAmount(amount);
+        } catch (SQLException e) {
+            System.out.println("Error getting discount: " + e.getMessage());
             return new Discount(0.0, 0.0);
         }
-        return new Discount(discountPrice, discountMap.get(discountPrice));
     }
 
     public static void printAllDiscounts() {
-        if (discountMap.isEmpty()) {
-            System.out.println("No discounts configured.");
-            return;
+        try {
+            List<Discount> discounts = discountDAO.getAll();
+            if (discounts.isEmpty()) {
+                System.out.println("No discounts configured.");
+                return;
+            }
+            System.out.println("\n--- Active Discounts ---");
+            for (Discount d : discounts) {
+                System.out.printf("  Orders above Rs.%.2f → %.1f%% off%n",
+                        d.getThreshold(), d.getRate() * 100);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error listing discounts: " + e.getMessage());
         }
-        System.out.println("+----------------+----------------+");
-        System.out.println("| Threshold (Rs) | Discount Rate  |");
-        System.out.println("+----------------+----------------+");
-        for (Map.Entry<Double, Double> entry : discountMap.entrySet()) {
-            System.out.printf("  | %14.2f | %13.1f%% |%n", entry.getKey(), entry.getValue() * 100);
-        }
-        System.out.println("+----------------+----------------+");
     }
 }

@@ -1,11 +1,11 @@
 package panel;
 
 import exception.EmptyCartException;
-import exception.UserNotFoundException;
 import model.enums.PaymentMode;
 import model.order.MenuComponent;
 import model.order.MenuItem;
 import model.order.Order;
+import model.payment.Discount;
 import model.payment.Payment;
 import model.payment.PaymentFactory;
 import model.payment.PaymentStrategy;
@@ -24,7 +24,7 @@ public class CustomerPanel {
     private final EventManager eventManager;
     private final Scanner scanner;
     private Customer loggedInCustomer;
-    private CartService cartService;
+    private final CartService cartService = new CartService();
 
     public CustomerPanel(CustomerService customerService, AdminService adminService,
             OrderService orderService, EventManager eventManager, Scanner scanner) {
@@ -99,7 +99,7 @@ public class CustomerPanel {
             case "5":
                 try {
                     placeOrder();
-                }catch (EmptyCartException e){
+                } catch (EmptyCartException e) {
                     System.err.println(e.getMessage());
                 }
                 break;
@@ -133,7 +133,6 @@ public class CustomerPanel {
             System.out.print("Enter your delivery address: ");
             String address = scanner.nextLine().trim();
             loggedInCustomer.setAddress(address);
-            cartService = new CartService();
 
             CustomerObserver observer = new CustomerObserver(loggedInCustomer.getUserId(),
                     loggedInCustomer.getUsername());
@@ -152,17 +151,9 @@ public class CustomerPanel {
         String username = scanner.nextLine().trim();
         System.out.print("Password: ");
         String password = scanner.nextLine().trim();
-        User user = null;
-        try {
-            user = customerService.login(username, password);
-        }catch (UserNotFoundException e){
-            System.err.println(e.getMessage());
-        }
+        User user = customerService.login(username, password);
         if (user instanceof Customer) {
             loggedInCustomer = (Customer) user;
-            if (cartService == null) {
-                cartService = new CartService();
-            }
             if (loggedInCustomer.getAddress() == null || loggedInCustomer.getAddress().isEmpty()) {
                 System.out.print("Enter your delivery address: ");
                 String address = scanner.nextLine().trim();
@@ -182,7 +173,7 @@ public class CustomerPanel {
     }
 
     private void logout() {
-        customerService.logout(loggedInCustomer.getUsername());
+        customerService.logout(loggedInCustomer);
         loggedInCustomer = null;
     }
 
@@ -232,64 +223,81 @@ public class CustomerPanel {
             return;
         }
 
-        cartService.addToCart(selectedItem, quantity);
-        System.out.println("Added " + quantity + " x " + selectedItem.getName() + " to cart.");
+        cartService.addToCart(loggedInCustomer.getUserId(), selectedItem, quantity);
     }
 
     private void viewCart() throws EmptyCartException {
-        if (cartService.isEmpty()) {
+        if (cartService.isCartEmpty(loggedInCustomer.getUserId())) {
             throw new EmptyCartException("Can't view empty cart.");
         }
         System.out.println("\n--- Your Cart ---");
-        cartService.printCart();
+        Map<MenuItem, Integer> items = cartService.getCartItems(loggedInCustomer.getUserId());
+        double total = 0;
+        for (Map.Entry<MenuItem, Integer> entry : items.entrySet()) {
+            MenuItem item = entry.getKey();
+            int qty = entry.getValue();
+            double lineTotal = item.getPrice() * qty;
+            total += lineTotal;
+            System.out.printf("  %-25s x%d  Rs.%.2f%n", item.getName(), qty, lineTotal);
+        }
+        System.out.printf("  Cart Total: Rs.%.2f%n", total);
     }
 
     private void removeFromCart() throws EmptyCartException {
-        Map<MenuItem, Integer> cartMap = cartService.getCartItemMap();
-        if (cartService.isEmpty()) {
+        if (cartService.isCartEmpty(loggedInCustomer.getUserId())) {
             throw new EmptyCartException("Can't remove from empty cart.");
         }
+        Map<MenuItem, Integer> cartMap = cartService.getCartItems(loggedInCustomer.getUserId());
         List<MenuItem> cartItems = new ArrayList<>(cartMap.keySet());
         System.out.println("\nCart Items:");
-        for (Integer i = 0; i < cartItems.size(); i++) {
+        for (int i = 0; i < cartItems.size(); i++) {
             MenuItem item = cartItems.get(i);
             System.out.printf("%d. %-25s (Qty: %d)%n", (i + 1), item.getName(), cartMap.get(item));
         }
         System.out.print("Enter item number to remove: ");
-        Integer itemIndex = Integer.parseInt(scanner.nextLine().trim()) - 1;
+        int itemIndex = Integer.parseInt(scanner.nextLine().trim()) - 1;
         if (itemIndex < 0 || itemIndex >= cartItems.size()) {
             System.out.println("Invalid item number.");
             return;
         }
         MenuItem toRemove = cartItems.get(itemIndex);
-        Integer currentQty = cartMap.get(toRemove);
+        int currentQty = cartMap.get(toRemove);
         System.out.print("Current quantity: " + currentQty + ". How many to remove? ");
-        Integer removeQty = Integer.parseInt(scanner.nextLine().trim());
+        int removeQty = Integer.parseInt(scanner.nextLine().trim());
         if (removeQty <= 0) {
             System.out.println("Invalid quantity.");
             return;
         }
         if (removeQty >= currentQty) {
-            cartService.removeFromCart(toRemove);
+            cartService.removeFromCart(loggedInCustomer.getUserId(), toRemove.getId());
             System.out.println("Removed all " + toRemove.getName() + " from cart.");
         } else {
-            cartService.reduceQuantity(toRemove, removeQty);
+            cartService.updateQuantity(loggedInCustomer.getUserId(), toRemove.getId(), currentQty - removeQty);
             System.out.println("Removed " + removeQty + " x " + toRemove.getName() + " from cart. Remaining: "
                     + (currentQty - removeQty));
         }
     }
 
     private void placeOrder() throws EmptyCartException {
-        if (cartService.isEmpty()) {
-            throw new EmptyCartException("No items in. Can't place order.");
+        if (cartService.isCartEmpty(loggedInCustomer.getUserId())) {
+            throw new EmptyCartException("No items in cart. Can't place order.");
         }
 
-        System.out.println("\n--- Order Summary ---");
-        cartService.printCart();
+        Map<MenuItem, Integer> cartItems = cartService.getCartItems(loggedInCustomer.getUserId());
 
-        Double subtotal = cartService.calculateTotalValue();
-        Double discountAmount = cartService.findDiscount(subtotal);
-        Double finalAmount = cartService.findFinalAmount(subtotal, discountAmount);
+        System.out.println("\n--- Order Summary ---");
+        double subtotal = 0;
+        for (Map.Entry<MenuItem, Integer> entry : cartItems.entrySet()) {
+            MenuItem item = entry.getKey();
+            int qty = entry.getValue();
+            double lineTotal = item.getPrice() * qty;
+            subtotal += lineTotal;
+            System.out.printf("  %-25s x%d  Rs.%.2f%n", item.getName(), qty, lineTotal);
+        }
+
+        Discount discount = DiscountService.getDiscount(subtotal);
+        double discountAmount = subtotal * discount.getRate();
+        double finalAmount = subtotal - discountAmount;
 
         System.out.printf("Subtotal     : Rs.%.2f%n", subtotal);
         System.out.printf("Discount     : Rs.%.2f%n", discountAmount);
@@ -308,37 +316,41 @@ public class CustomerPanel {
         System.out.print("Choose: ");
         String paymentChoice = scanner.nextLine().trim();
         PaymentMode paymentMode;
-        PaymentStrategy paymentStrategy;
         String paymentIdentifier = null;
         if ("1".equals(paymentChoice)) {
             paymentMode = PaymentMode.CASH;
         } else if ("2".equals(paymentChoice)) {
-            System.out.println("Enter upi id: ");
+            System.out.print("Enter UPI ID: ");
             paymentIdentifier = scanner.nextLine().trim();
             paymentMode = PaymentMode.UPI;
         } else {
             System.out.println("Invalid payment method. Order cancelled.");
             return;
         }
-        paymentStrategy = PaymentFactory.createPayment(paymentMode.toString());
 
+        PaymentStrategy paymentStrategy = PaymentFactory.createPayment(paymentMode.toString());
         Payment payment = new Payment(null, finalAmount, paymentMode, paymentStrategy, paymentIdentifier);
         payment.processPayment();
 
-        Order order = new Order(
+        String address = loggedInCustomer.getAddress() != null ? loggedInCustomer.getAddress() : "N/A";
+
+        Order order = orderService.addOrder(
                 loggedInCustomer.getUserId(),
                 loggedInCustomer.getUsername(),
-                loggedInCustomer.getAddress(),
-                cartService.getCartItemMap(),
+                address,
+                cartItems,
                 subtotal,
                 discountAmount,
-                finalAmount);
-        order.setPaymentMode(paymentMode);
+                finalAmount,
+                paymentMode.name());
 
-        orderService.addOrder(order);
+        if (order != null) {
+            InvoiceService invoiceService = new InvoiceService(orderService);
+            invoiceService.printInvoice(order.getOrderId());
+            cartService.clearCart(loggedInCustomer.getUserId());
 
-        InvoiceService.printInvoice(order);
-        cartService.clearCart();
+            eventManager.notifyObservers("ORDER_PLACED", order);
+        }
     }
 
     private void viewMyOrders() {
@@ -355,25 +367,25 @@ public class CustomerPanel {
                     + (order.getAssignedAgentName() != null ? " | Agent: " + order.getAssignedAgentName() : ""));
         }
     }
-    private void editCustomerProfile(){
-        System.out.println("Enter current password: ");
+
+    private void editCustomerProfile() {
+        System.out.print("Enter current password: ");
         String currentPassword = scanner.nextLine().trim();
-        if(!loggedInCustomer.getPassword().equals(currentPassword)){
+        if (!loggedInCustomer.getPassword().equals(currentPassword)) {
             System.out.println("Wrong password. Attempt to edit profile failed.");
             return;
         }
-        System.out.println("New username (enter 0 to keep old one): ");
+        System.out.print("New username (enter 0 to keep old one): ");
         String username = scanner.nextLine().trim();
-        System.out.println("New password (enter 0 to keep old one): ");
+        System.out.print("New password (enter 0 to keep old one): ");
         String password = scanner.nextLine().trim();
-        System.out.println("New phone number (enter 0 to keep old one): ");
+        System.out.print("New phone number (enter 0 to keep old one): ");
         String phoneNumber = scanner.nextLine().trim();
 
-        Map<String, String> updateInfo = new HashMap<>();
-        updateInfo.put("username", username);
-        updateInfo.put("password", password);
-        updateInfo.put("phone_number", phoneNumber);
+        String newUsername = "0".equals(username) ? loggedInCustomer.getUsername() : username;
+        String newPassword = "0".equals(password) ? loggedInCustomer.getPassword() : password;
+        String newPhone = "0".equals(phoneNumber) ? loggedInCustomer.getPhoneNumber() : phoneNumber;
 
-        customerService.editUserProfile(loggedInCustomer, updateInfo);
+        customerService.editUserProfile(loggedInCustomer, newUsername, newPassword, newPhone);
     }
 }

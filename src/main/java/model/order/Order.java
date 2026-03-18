@@ -11,9 +11,9 @@ public class Order {
 
     private final Integer orderId;
     private final Integer customerId;
-    private final String customerName;
+    private String customerName;
     private final String customerAddress;
-    private final Map<MenuItem, Integer> items;
+    private Map<MenuItem, Integer> items;
     private final Double subtotal;
     private final Double discountAmount;
     private final Double finalAmount;
@@ -36,6 +36,23 @@ public class Order {
         this.status = OrderStatus.PLACED;
     }
 
+    public Order(int orderId, int customerId, String customerName, String customerAddress,
+            double subtotal, double discountAmount, double finalAmount,
+            PaymentMode paymentMode, OrderStatus status, Integer assignedAgentId, String assignedAgentName) {
+        this.orderId = orderId;
+        this.customerId = customerId;
+        this.customerName = customerName;
+        this.customerAddress = customerAddress;
+        this.items = new java.util.HashMap<>();
+        this.subtotal = subtotal;
+        this.discountAmount = discountAmount;
+        this.finalAmount = finalAmount;
+        this.paymentMode = paymentMode;
+        this.status = status;
+        this.assignedAgentId = assignedAgentId;
+        this.assignedAgentName = assignedAgentName;
+    }
+
     public Integer getOrderId() {
         return orderId;
     }
@@ -54,6 +71,10 @@ public class Order {
 
     public Map<MenuItem, Integer> getItems() {
         return items;
+    }
+
+    public void setItems(Map<MenuItem, Integer> items) {
+        this.items = items;
     }
 
     public Double getSubtotal() {
